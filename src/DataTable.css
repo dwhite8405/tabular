@@ -1,0 +1,33 @@
+.datatable {
+    border:'1px solid red';
+    position: relative;
+    display: grid;
+    grid-gap: 1px;
+}
+
+.datatable-head {
+    background-color:darkgrey;
+}
+
+.datatable-head-cell {
+    border: 1px solid gray;
+}
+
+.datatable-table {
+    border-collapse:collapse;
+}
+
+.datatable-cell {
+    border: 1px solid red;
+}
+
+.datatable-contentsdiv {
+    overflow: auto;
+    height:400px;
+}
+
+.datatable-minibutton {
+    border: none;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
