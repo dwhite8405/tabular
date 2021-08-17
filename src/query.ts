@@ -62,6 +62,9 @@ export interface Query {
     // "select" is the list of currently visible columns.
     select: ComplexColumnDefinition;
 
+    // "filter" is the filter at the top, or the "WHERE" part of SQL.
+    filter?: FilterClause;
+
     // "expand" is which hierarchical (sub-)columns are visible.
     expand(column: ColumnDefinition) : Query;
     isExpanded(column: ColumnDefinition): boolean;
@@ -87,12 +90,56 @@ export interface Query {
     refetchContents() : void;
 }
 
+interface FilterClause {
+
+}
+
+class AndClause implements FilterClause {
+    left? : FilterClause;
+    right?: FilterClause;
+}
+
+class OrClause implements FilterClause {
+    left? : FilterClause;
+    right?: FilterClause;
+}
+
+class NotClause implements FilterClause {
+    clause?: FilterClause;
+}
+
+class OperatorClause implements FilterClause {
+    operator?: Operator;
+    left?: ValueClause;
+    right?: ValueClause;
+}
+
+interface ValueClause {}
+
+class LiteralClause implements ValueClause {
+    value: any;
+}
+
+class ColumnClause implements ValueClause {
+    column?: ColumnDefinition;
+}
+
+enum Operator {
+    equals,
+    greaterThan,
+    lessThan,
+    like, // Must be string.
+    startsWith,
+    endsWith,
+    in, // Must be list
+}
+
 abstract class AbstractQuery implements Query {
     _tableName: string;
     _orderBy: Array<OrderedByEntry>; // Which columns to sort by.
     _select: ComplexColumnDefinition; // The visible columns, and whether they're expanded.
     _count: boolean; // TODO whether I'm a 'select count(*)'
-    _filter?: any; // TODO
+    filter?: any; // TODO
     _search?: string; // TODO - generic string search
     //[key: string]: any;
 
