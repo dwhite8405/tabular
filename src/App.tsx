@@ -2,6 +2,8 @@ import React from 'react';
 import { DataTable, range } from './DataTable';
 import { Room } from './Room';
 import * as query from './query';
+import { ODataQuery } from './oDataQuery';
+import { CollectionQuery } from './collectionQuery';
 
 import './App.css';
 import './DataTable.css';
@@ -39,8 +41,8 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private makeQueries = () => {
-    let q1 : query.Query = query.ODataQuery.create(this.url, this.tableName);
-    let q2 : query.Query = new query.CollectionQuery(
+    let q1 : query.Query = ODataQuery.create(this.url, this.tableName);
+    let q2 : query.Query = new CollectionQuery(
       [{name:'foo'}, {name: 'bar'}, {name: 'baz'}], 
       range(20000).map(each => [each, each+100, each+10000]));
       q2.name = "20000 items.";
@@ -58,7 +60,7 @@ class App extends React.Component<AppProps, AppState> {
       return [integer, float, text, "todo", "todo", "todo"];
     });
 
-    let q = new query.CollectionQuery(
+    let q = new CollectionQuery(
       [{name:'Integer'}, {name: 'Float'}, {name: 'Text'}, {name: 'Date'}, {name: 'Select'}, {name: 'Expandable'}], 
       contents);
     q.name = "Interesting stuff";

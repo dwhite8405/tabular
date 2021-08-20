@@ -1,4 +1,5 @@
 import React from 'react';
+import { CollectionQuery } from './collectionQuery';
 import * as query from './query';
 import './App.css';
 import './DataTable.css';
@@ -51,7 +52,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
     public static defaultProps = {
-        table: (new query.CollectionQuery([], [])),
+        table: (new CollectionQuery([], [])),
         refetch: (() => { })
     }
 

@@ -1,3 +1,4 @@
+import { ODataQuery } from '../oDataQuery';
 import * as query from '../query'
 
 /** Return the URL where the document metadata can be retrieved. */
@@ -17,7 +18,7 @@ export function tableURL(baseURL: string, tableName: string) {
 
 
 export function setTableColumns(
-    table: query.ODataQuery,
+    table: ODataQuery,
     metadataXML: string, 
     tableName: string)
 {
@@ -44,7 +45,7 @@ export function setTableColumns(
     console.log("Error: could not set table.");
 }
 
-function setTableColumns2(table: query.ODataQuery, namespace: string, xml: Document, entityType: string | null) {
+function setTableColumns2(table: ODataQuery, namespace: string, xml: Document, entityType: string | null) {
     let entities = xml.getElementsByTagName("edmx:Edmx")[0]
         .getElementsByTagName("edmx:DataServices")[0]
         .getElementsByTagName("Schema")[0]
@@ -58,7 +59,7 @@ function setTableColumns2(table: query.ODataQuery, namespace: string, xml: Docum
 }
 
 function setTableColumns3(
-    table: query.ODataQuery,
+    table: ODataQuery,
     entity: Element, 
     namespace: string,
     metadata: Document)
@@ -112,7 +113,7 @@ function createColumnFrom(node: Element, namespace: string, metadata: Document) 
 }
 
 /** contents could be JSON or Atom. */
-export function setContents(table: query.ODataQuery, obj: any) {
+export function setContents(table: ODataQuery, obj: any) {
     let result: Array<query.Row> = [];
 
     if (undefined===obj.value) {
