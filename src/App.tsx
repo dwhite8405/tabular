@@ -61,7 +61,17 @@ class App extends React.Component<AppProps, AppState> {
     });
 
     let q = new CollectionQuery(
-      [{name:'Integer'}, {name: 'Float'}, {name: 'Text'}, {name: 'Date'}, {name: 'Select'}, {name: 'Expandable'}], 
+      [
+        {name:'Integer', type:query.PrimitiveType.Int32}, 
+        {name: 'Float', type:query.PrimitiveType.Decimal}, 
+        {name: 'Text', type:query.PrimitiveType.String},
+        {name: 'Date', type:query.PrimitiveType.Date},
+        {name: 'Select'},
+        {name: 'Expandable', contents: [
+          {name:'Integer', type:query.PrimitiveType.Int32}, 
+          {name: 'Text', type:query.PrimitiveType.String},
+          {name: 'Date', type:query.PrimitiveType.Date}
+        ]}], 
       contents);
     q.name = "Interesting stuff";
     return q;

@@ -223,7 +223,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                             gridColumnStart: column+1,
                             gridColumnEnd: column+1,
                             whiteSpace: 'nowrap',
-                            backgroundColor: "red"                         
+                            backgroundColor: "red",
+                            textAlign: "right" // It would be nice to making decimal points match.
                         }
                         return <div key={`R${row}C${column}`}
                             style={layout}>

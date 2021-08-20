@@ -1,17 +1,36 @@
-import { AbstractQuery, PrimitiveColumnDefinition, PrimitiveType, Row, Query } from "./query";
+import { AbstractQuery, PrimitiveColumnDefinition, PrimitiveType, Row, Query, ColumnDefinition, ComplexColumnDefinition } from "./query";
 
-export interface CollectionQueryColumn {
+interface CollectionQueryColumn {
     name: string;
+    type?: PrimitiveType;
 }
+
+interface ComplexCollectionQueryColumn {
+    name: string;
+    contents: CollectionColumnDefs[];
+}
+
+type CollectionColumnDefs = CollectionQueryColumn | ComplexCollectionQueryColumn
 
 export class CollectionQuery extends AbstractQuery {
     contents:  Array<Array<any>> ;
 
-    constructor(columns: Array<CollectionQueryColumn>, contents: Array<any>) {
+    constructor(columns: Array<CollectionColumnDefs>, contents: Array<any>) {
         super();
-        columns.forEach( each => 
-            this.select.columns.push(new PrimitiveColumnDefinition(each.name, PrimitiveType.String)));
+        this.addColumns(columns, this.select.columns);
         this.contents = contents;
+    }
+
+    addColumns = (defs: CollectionColumnDefs[], columns: ColumnDefinition[], parent?: ColumnDefinition) => {
+        defs.forEach( each => {
+            if ('contents' in each) {
+                let b = new ComplexColumnDefinition(each.name, parent);
+                this.addColumns(each.contents, b.childColumns);
+                this.select.columns.push(b);
+            } else {
+                this.select.columns.push(new PrimitiveColumnDefinition(each.name, each.type))    
+            }
+        });
     }
 
     count = () => {
@@ -26,6 +45,13 @@ export class CollectionQuery extends AbstractQuery {
     }
 
     copy : () => Query = () => {
-        return new CollectionQuery(this.select.columns, this.contents).copyFrom(this);
+        let result = new CollectionQuery([], this.contents).copyFrom(this);
+        return result;
+    }
+
+    copyFrom = (me : CollectionQuery) => {
+        let result = super.copyFrom(me);
+        result.select.columns = me.select.columns;
+        return result;
     }
 }

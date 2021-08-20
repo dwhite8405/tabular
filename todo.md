@@ -1,10 +1,10 @@
+Expand columns (not working for the 'interesting' demo).
+
 Tests
 
 OData - fetching more than 8 rows at a time.
 
 Right-click menus.
-
-Expand columns.
 
 Hide columns.
 

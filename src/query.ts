@@ -250,9 +250,13 @@ export abstract class ColumnDefinition {
 export class PrimitiveColumnDefinition extends ColumnDefinition {
     _type: PrimitiveType;
 
-    constructor(name: string, type: PrimitiveType, parent?: ColumnDefinition) {
+    constructor(name: string, type?: PrimitiveType, parent?: ColumnDefinition) {
         super(name, parent);
-        this._type = type;
+        if (undefined===type) {
+            this._type = PrimitiveType.String;
+        } else {
+            this._type = type;
+        }
     }
 
     isComplex() : boolean {
