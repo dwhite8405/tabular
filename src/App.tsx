@@ -44,7 +44,25 @@ class App extends React.Component<AppProps, AppState> {
       [{name:'foo'}, {name: 'bar'}, {name: 'baz'}], 
       range(20000).map(each => [each, each+100, each+10000]));
       q2.name = "20000 items.";
-    return [q1, q2];
+    let q3: query.Query = this.makeBigLocalInterestingQuery();
+    return [q1, q2, q3];
+  }
+
+  private makeBigLocalInterestingQuery() : query.Query {
+    let size = 200;
+
+    let contents = range(size).map(index => {
+      let integer = index;
+      let float = index+(1/index);
+      let text = "abcd"+index;
+      return [integer, float, text, "todo", "todo", "todo"];
+    });
+
+    let q = new query.CollectionQuery(
+      [{name:'Integer'}, {name: 'Float'}, {name: 'Text'}, {name: 'Date'}, {name: 'Select'}, {name: 'Expandable'}], 
+      contents);
+    q.name = "Interesting stuff";
+    return q;
   }
 
   private changed(e:React.ChangeEvent<HTMLSelectElement>) {
