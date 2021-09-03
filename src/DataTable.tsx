@@ -3,6 +3,7 @@ import { CollectionQuery } from './collectionQuery';
 import * as query from './query';
 import './App.css';
 import './DataTable.css';
+import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
 
 // TODO If the size of the contents div changes:
 //  https://www.pluralsight.com/guides/re-render-react-component-on-window-resize
@@ -16,22 +17,21 @@ export interface DataTableProps {
 
 export interface DataTableState {
     firstVisibleRow: number; // Index of the row at the top of the visible table.
-    
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
     // What percentage (actually 0 to 1) of rows to render off-screen as a buffer.
 
     private columnWidths: Array<number>;
-    private contentDivRef : React.RefObject<HTMLDivElement>;
+    private contentDivRef: React.RefObject<HTMLDivElement>;
 
-    private height : number = 100; // Height in pixels of the visible table contents.
+    private height: number = 100; // Height in pixels of the visible table contents.
 
     // Managing virtual scrolling:
-    private pixelsPerRow : number = 30; 
-    private numVisibleRows : number = 3; // Should be height/pixelsPerRow
-    private firstRenderedRow: number=0; // Off-screen, the first row we render.
-    private lastRenderedRow: number=0; // Off-screen, the last row we render.
+    private pixelsPerRow: number = 30;
+    private numVisibleRows: number = 3; // Should be height/pixelsPerRow
+    private firstRenderedRow: number = 0; // Off-screen, the first row we render.
+    private lastRenderedRow: number = 0; // Off-screen, the last row we render.
     private numRows: number = 1;
 
     constructor(props: Readonly<DataTableProps>) {
@@ -85,19 +85,20 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                     style={this.gridStyle()}
                     onScroll={(e) => this.handleScroll(e)}
                     ref={this.contentDivRef}>
-                    
+
                     {/* The enourmous div to make the scroll bar happen. */}
-                    <div style={{height: this.pixelsPerRow * this.numRows}}>
+                    <div style={{ height: this.pixelsPerRow * this.numRows }}>
 
                         {/* Only the currently visible rows. */}
                         <div style={{
                             ...this.gridStyle(),
-                            transform: `translateY(${this.state.firstVisibleRow*this.pixelsPerRow}px)`
+                            transform: `translateY(${this.state.firstVisibleRow * this.pixelsPerRow}px)`
                         }}>
                             {this.renderTableContent()}
                         </div>
                     </div>
                 </div>
+                {this.contextMenus()}
             </div>
         );
     }
@@ -120,16 +121,16 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         let mmaxDepth: number = columns.depth();
 
         if (columns.isEmpty()) {
-            return <React.Fragment />
+            return <></>
         } else {
-            return <React.Fragment> {
+            return <> {
                 range(mmaxDepth).map(ddepth =>
-                (<React.Fragment>
+                (<>
                     {this.renderHeadingsToHtmlAtDepth(columns, ddepth,
                         mmaxDepth)}
-                </React.Fragment>
+                </>
                 ))
-            } </React.Fragment>
+            } </>
         }
     }
 
@@ -141,10 +142,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
         return (<React.Fragment>
             {columns.map(
-                (each, i) => 
+                (each, i) =>
                     this.renderHeadingToHtml(
                         each, i, ddepth, mmaxDepth)
-                )
+            )
             }
         </React.Fragment>);
     }
@@ -193,19 +194,25 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             gridColumnEnd: index + 1
         }
 
-        return (<React.Fragment>
+        return (<>
             {renderMe.map(each => {
-                return <div
-                    className="datatable-head-cell"
-                    style={layout}
-                    /*rowSpan={mmaxDepth - column.depth()}*/>
-                    {collapse}
-                    {each.name}
-                    {orderBy}
-                </div>
+                return <ContextMenuTrigger 
+                id="contextmenu"  
+                holdToDisplay={1000}
+                >
+                    {/* We assume the first child here has data-columnName */}
+                    <div
+                        className="datatable-head-cell"
+                        style={layout}
+                        data-columnName={each.name}>
+                        {collapse}
+                        {each.name}
+                        {orderBy}
+                    </div>
+                </ContextMenuTrigger>
             }
             )}
-        </React.Fragment>);
+        </>);
     }
 
     /** Render only the visible cells. */
@@ -215,13 +222,13 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             rows.map((eachRow, row) =>
                 <>
                     {eachRow.cells.map((eachCell, column) => {
-                        const layout : React.CSSProperties = {
+                        const layout: React.CSSProperties = {
                             overflowX: "hidden",
                             height: this.pixelsPerRow,
                             gridRowStart: row + 1,
                             gridRowEnd: row + 1,
-                            gridColumnStart: column+1,
-                            gridColumnEnd: column+1,
+                            gridColumnStart: column + 1,
+                            gridColumnEnd: column + 1,
                             whiteSpace: 'nowrap',
                             backgroundColor: "red",
                             textAlign: "right" // It would be nice to making decimal points match.
@@ -236,8 +243,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             ));
     }
 
-    private asString(o : any) : string {
-        if ("object"===typeof o) {
+    private asString(o: any): string {
+        if ("object" === typeof o) {
             let v = Object.values(o);
             if (v.length > 0) {
                 return this.asString(Object.values(o)[0]);
@@ -287,13 +294,30 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
 
-    componentDidMount : () => void = () => {
+    componentDidMount: () => void = () => {
         console.log("componentDidMount");
         if (null !== this.contentDivRef.current) {
             this.height = this.contentDivRef.current.clientHeight;
             // Plus 2 - one to counteract Math.floor, one to cover the gap at the bottom.
-            this.numVisibleRows = Math.floor(this.height / this.pixelsPerRow)+1;
+            this.numVisibleRows = Math.floor(this.height / this.pixelsPerRow) + 1;
         }
+    }
+
+    contextMenus = () => {
+        return <ContextMenu id="contextmenu">
+            <MenuItem data={{foo:'bar'}} onClick={this.contextMenuOnClick}>
+                Click me.
+            </MenuItem>
+        </ContextMenu>
+    }
+
+    contextMenuOnClick = (
+        e:React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>, 
+        data: Object, 
+        target: HTMLElement) => {
+            let columnHeading : string|null = target.getAttribute("data-column-heading");
+            
+            alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnName')}`)
     }
 }
 
