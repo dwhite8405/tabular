@@ -46,7 +46,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         this.onExpandComplexColumn = this.onExpandComplexColumn.bind(this);
         this.onUnexpandComplexColumn = this.onUnexpandComplexColumn.bind(this);
         this.renderHeadingToHtml = this.renderHeadingToHtml.bind(this);
-        this.renderHeadingsToHtmlAtDepth = this.renderHeadingsToHtmlAtDepth.bind(this);
         this.renderHeadings = this.renderHeadings.bind(this);
         this.renderTableContent = this.renderTableContent.bind(this);
     }
@@ -134,28 +133,31 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
-    private renderHeadingsToHtmlAtDepth(
+    /* Render one row of the columns. There are multiple rows depending on which
+    columns have been expanded. */
+    private renderHeadingsToHtmlAtDepth = (
         columns: query.ComplexColumnDefinition,
         ddepth: number,
-        mmaxDepth: number)
-        : JSX.Element {
-
-        return (<React.Fragment>
+        mmaxDepth: number) => {
+        return (<>
             {columns.map(
                 (each, i) =>
                     this.renderHeadingToHtml(
                         each, i, ddepth, mmaxDepth)
             )
             }
-        </React.Fragment>);
+        </>);
     }
 
+    /* Render one column heading. */
     private renderHeadingToHtml(
         column: query.ColumnDefinition,
         index: number,
         ddepth: number,
         mmaxDepth: number)
         : JSX.Element {
+        console.log(`Rendering at depth ${ddepth}`)
+
         let t = this.props.table;
 
         let renderMe: Array<query.ColumnDefinition> =
@@ -164,25 +166,26 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         let collapse: JSX.Element;
         if (column.isComplex()) {
             if (this.props.table.isExpanded(column)) {
-                collapse = miniButton("⏷",
+                collapse = miniButton("datatable-expandbutton", "⏷",
                     (e) => this.onExpandComplexColumn(e, t, column));
             } else {
-                collapse = miniButton("⏵", (e) => this.onUnexpandComplexColumn(e, t, column));
+                collapse = miniButton("datatable-expandbutton", "⏵",
+                    (e) => this.onUnexpandComplexColumn(e, t, column));
             }
         }
 
         let orderBy: JSX.Element;
         switch (query.orderedBy(t, column)) {
             case query.OrderedBy.ASC:
-                orderBy = miniButton("◢", (e) =>
+                orderBy = miniButton("datatable-sortbutton", "◢", (e) =>
                     this.onOrderBy(e, t, column, query.OrderedBy.DESC));
                 break;
             case query.OrderedBy.DESC:
-                orderBy = miniButton("◥", (e) =>
+                orderBy = miniButton("datatable-sortbutton", "◥", (e) =>
                     this.onOrderBy(e, t, column, query.OrderedBy.NA));
                 break;
             default:
-                orderBy = miniButton("⊿", (e) =>
+                orderBy = miniButton("datatable-sortbutton", "◇", (e) =>
                     this.onOrderBy(e, t, column, query.OrderedBy.ASC));
                 break;
         }
@@ -194,22 +197,23 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             gridColumnEnd: index + 1
         }
 
+
         return (<>
             {renderMe.map(each => {
-                return <ContextMenuTrigger 
-                id="contextmenu"  
-                holdToDisplay={1000}
-                >
-                    {/* We assume the first child here has data-columnName */}
-                    <div
-                        className="datatable-head-cell"
-                        style={layout}
-                        data-columnName={each.name}>
-                        {collapse}
-                        {each.name}
-                        {orderBy}
-                    </div>
-                </ContextMenuTrigger>
+                return <div style={layout}>
+                    <ContextMenuTrigger
+                        id="contextmenu"
+                        holdToDisplay={1000}>
+                        {/* We assume the first child here has data-columnName */}
+                        <div
+                            className="datatable-head-cell"
+                            data-columnName={each.name}>
+                            {collapse}
+                            <span>{each.name}</span>
+                            {orderBy}
+                        </div>
+                    </ContextMenuTrigger>
+                </div>
             }
             )}
         </>);
@@ -305,19 +309,19 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     contextMenus = () => {
         return <ContextMenu id="contextmenu">
-            <MenuItem data={{foo:'bar'}} onClick={this.contextMenuOnClick}>
+            <MenuItem data={{ foo: 'bar' }} onClick={this.contextMenuOnClick}>
                 Click me.
             </MenuItem>
         </ContextMenu>
     }
 
     contextMenuOnClick = (
-        e:React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>, 
-        data: Object, 
+        e: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement, MouseEvent>,
+        data: Object,
         target: HTMLElement) => {
-            let columnHeading : string|null = target.getAttribute("data-column-heading");
-            
-            alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnName')}`)
+        let columnHeading: string | null = target.getAttribute("data-column-heading");
+
+        alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnName')}`)
     }
 }
 
@@ -353,8 +357,9 @@ function flatten(list: Array<any>) {
 }
 
 function miniButton(
+    cssClass: string,
     contents: string,
     action: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void)) {
-    return (<button onClick={action} className="datatable-minibutton">{contents}</button>);
+    return (<button onClick={action} className={cssClass}>{contents}</button>);
 }
 

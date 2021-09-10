@@ -21,14 +21,14 @@ export class CollectionQuery extends AbstractQuery {
         this.contents = contents;
     }
 
-    addColumns = (defs: CollectionColumnDefs[], columns: ColumnDefinition[], parent?: ColumnDefinition) => {
+    private addColumns = (defs: CollectionColumnDefs[], columns: ColumnDefinition[], parent?: ColumnDefinition) => {
         defs.forEach( each => {
             if ('contents' in each) {
                 let b = new ComplexColumnDefinition(each.name, parent);
                 this.addColumns(each.contents, b.childColumns);
-                this.select.columns.push(b);
+                columns.push(b);
             } else {
-                this.select.columns.push(new PrimitiveColumnDefinition(each.name, each.type))    
+                columns.push(new PrimitiveColumnDefinition(each.name, each.type))    
             }
         });
     }

@@ -1,4 +1,5 @@
 Expand columns (not working for the 'interesting' demo).
+    - Expanded columns must also be movable.
 
 Tests
 

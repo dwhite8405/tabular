@@ -47,7 +47,7 @@ class App extends React.Component<AppProps, AppState> {
       range(20000).map(each => [each, each+100, each+10000]));
       q2.name = "20000 items.";
     let q3: query.Query = this.makeBigLocalInterestingQuery();
-    return [q1, q2, q3];
+    return [q3, q2, q1];
   }
 
   private makeBigLocalInterestingQuery() : query.Query {
@@ -57,21 +57,24 @@ class App extends React.Component<AppProps, AppState> {
       let integer = index;
       let float = index+(1/index);
       let text = "abcd"+index;
-      return [integer, float, text, "todo", "todo", "todo"];
+      let expandable = [integer+10, `inside ${text}`, 'inside date'];
+      return [integer, float, [expandable, expandable, expandable], 
+        text, "a date", "a select"];
     });
 
     let q = new CollectionQuery(
       [
         {name:'Integer', type:query.PrimitiveType.Int32}, 
         {name: 'Float', type:query.PrimitiveType.Decimal}, 
+        {name: 'Expandable', contents: [
+          {name:'Inside Integer', type:query.PrimitiveType.Int32}, 
+          {name: 'Inside Text', type:query.PrimitiveType.String},
+          {name: 'Inside Date', type:query.PrimitiveType.Date}
+        ]},
         {name: 'Text', type:query.PrimitiveType.String},
         {name: 'Date', type:query.PrimitiveType.Date},
         {name: 'Select'},
-        {name: 'Expandable', contents: [
-          {name:'Integer', type:query.PrimitiveType.Int32}, 
-          {name: 'Text', type:query.PrimitiveType.String},
-          {name: 'Date', type:query.PrimitiveType.Date}
-        ]}], 
+      ], 
       contents);
     q.name = "Interesting stuff";
     return q;

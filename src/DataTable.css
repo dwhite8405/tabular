@@ -11,6 +11,13 @@
 
 .datatable-head-cell {
     border: 1px solid gray;
+    display: flex;
+    justify-content: space-between;
+    white-space: nowrap;
+}
+
+.datatable-head-cell span {
+    overflow-x: hidden;
 }
 
 .datatable-table {
@@ -26,9 +33,17 @@
     height:400px;
 }
 
-.datatable-minibutton {
+.datatable-expandbutton {
     border: none;
     margin: 0 0 0 0;
     padding: 0 0 0 0;
-    float: right;
+    flex-shrink: 0;
+}
+
+.datatable-sortbutton {
+    border: none;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+    flex-shrink: 0;
+    align-self: right;
 }
