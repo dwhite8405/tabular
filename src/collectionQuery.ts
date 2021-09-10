@@ -12,6 +12,19 @@ interface ComplexCollectionQueryColumn {
 
 type CollectionColumnDefs = CollectionQueryColumn | ComplexCollectionQueryColumn
 
+/* Working here: 
+
+Need to introduce the concept of a "table", which is the definition that a query builds on. 
+Table contains the original ColumnDefinitions.
+
+The user can expand, unexpand columns, move columns, remove and add columns. We need to
+pull these from the table.
+
+It's possible for a query to have the same column from a table twice, and that column
+could be inside an expanded column at two different ends of the header.
+
+*/
+
 export class CollectionQuery extends AbstractQuery {
     contents:  Array<Array<any>> ;
 

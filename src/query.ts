@@ -59,6 +59,7 @@ export interface Query {
     name: String;
 
     // "select" is the list of currently visible columns.
+    // It is a tree structure. Expandable columns can be expanded or not expanded.
     select: ComplexColumnDefinition;
 
     // "filter" is the filter at the top, or the "WHERE" part of SQL.
@@ -66,6 +67,7 @@ export interface Query {
 
     // "expand" is which hierarchical (sub-)columns are visible.
     expand(column: ColumnDefinition) : Query;
+    unexpand(column: ColumnDefinition) : Query;
     isExpanded(column: ColumnDefinition): boolean;
 
     // "orderBy" is the sort ordering of the table.
@@ -181,6 +183,11 @@ export abstract class AbstractQuery implements Query {
         return this;
     }
 
+    unexpand(column: ColumnDefinition) {
+        //this._query._expand.add(column);
+        return this;
+    }
+
     isExpanded(column: ColumnDefinition): boolean {
         //return this._query._expand.isExpanded(column);
         return false;
@@ -197,6 +204,7 @@ export abstract class AbstractQuery implements Query {
         return this._select.numColumns();
     }
 
+    /* Retrieve table contents for the given row range. */
     abstract get(from: number, to: number) : Row[];
 
     refetchColumns() {}
@@ -238,6 +246,12 @@ export abstract class ColumnDefinition {
         return [];
     }
 
+    // If I am expanded, how many columns wide am I on the screen?
+    width(): number { 
+        return 1;
+    }
+
+    // If I am expanded, how many heading rows deep am I?
     depth(): number {
         return 1;
     }
@@ -282,7 +296,25 @@ export class ComplexColumnDefinition extends ColumnDefinition {
         return this.childColumns;
     }
 
+    width() : number {
+        if (!this.isExpanded) {
+            return 1;
+        }
+
+        let totalWidth = 0;
+        for (let i=0; i<this.childColumns.length; i++) {
+            let current = this.childColumns[i].width();
+            totalWidth = totalWidth + current;
+            
+        }
+        return totalWidth;    
+    }
+
     depth() : number {
+        if (!this.isExpanded) {
+            return 1;
+        }
+
         let maxDepth = 0;
         for (let i=0; i<this.childColumns.length; i++) {
             let current = this.childColumns[i].depth();

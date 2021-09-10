@@ -118,6 +118,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     private renderHeadings(): JSX.Element {
         let columns: query.ComplexColumnDefinition = this.props.table.select;
         let mmaxDepth: number = columns.depth();
+        
 
         if (columns.isEmpty()) {
             return <></>
@@ -139,11 +140,14 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         columns: query.ComplexColumnDefinition,
         ddepth: number,
         mmaxDepth: number) => {
+            let widths : number[] = [0, ...columns.map(each => each.width())];
+            
+
         return (<>
             {columns.map(
                 (each, i) =>
                     this.renderHeadingToHtml(
-                        each, i, ddepth, mmaxDepth)
+                        each, i, widths, ddepth)
             )
             }
         </>);
@@ -153,8 +157,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     private renderHeadingToHtml(
         column: query.ColumnDefinition,
         index: number,
-        ddepth: number,
-        mmaxDepth: number)
+        widths: number[],
+        ddepth: number)
         : JSX.Element {
         console.log(`Rendering at depth ${ddepth}`)
 
@@ -167,10 +171,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         if (column.isComplex()) {
             if (this.props.table.isExpanded(column)) {
                 collapse = miniButton("datatable-expandbutton", "⏷",
-                    (e) => this.onExpandComplexColumn(e, t, column));
+                    (e) => this.onUnexpandComplexColumn(e, t, column));
             } else {
                 collapse = miniButton("datatable-expandbutton", "⏵",
-                    (e) => this.onUnexpandComplexColumn(e, t, column));
+                    (e) => this.onExpandComplexColumn(e, t, column));
             }
         }
 
@@ -190,11 +194,14 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
+        let gridColumnStart = widths.slice(0, index+1).reduce( (sum, current) => sum+current );
+        let gridColumnEnd = gridColumnStart + widths[index+1];
+        
         const layout = {
             gridRowStart: ddepth,
             gridRowEnd: ddepth,
-            gridColumnStart: index + 1,
-            gridColumnEnd: index + 1
+            gridColumnStart: gridColumnStart+1,
+            gridColumnEnd: gridColumnEnd+1
         }
 
 
@@ -207,7 +214,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                         {/* We assume the first child here has data-columnName */}
                         <div
                             className="datatable-head-cell"
-                            data-columnName={each.name}>
+                            data-columnname={each.name}>
                             {collapse}
                             <span>{each.name}</span>
                             {orderBy}
@@ -278,6 +285,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         column: query.ColumnDefinition
     )
         : void {
+            console.log("Expand " + column.name);
         this.props.refetch(t.copy().expand(column));
     }
 
@@ -288,6 +296,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     )
         : void {
         console.log("Unexpand " + column.name);
+        this.props.refetch(t.copy().unexpand(column));
     }
 
 
@@ -321,7 +330,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         target: HTMLElement) => {
         let columnHeading: string | null = target.getAttribute("data-column-heading");
 
-        alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnName')}`)
+        alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnname')}`)
     }
 }
 
