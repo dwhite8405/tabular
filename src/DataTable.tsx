@@ -10,7 +10,7 @@ import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
 
 
 export interface DataTableProps {
-    table: query.Query;
+    query: query.Query;
     refetch: any; // function. TODO: what is its type?
     children: never[];
 }
@@ -56,9 +56,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
     render = () => {
-        this.numRows = this.props.table.count();
+        this.numRows = this.props.query.count();
         this.columnWidths = (
-            range(this.props.table.numColumns())
+            range(this.props.query.numColumns())
                 .map((a) => 100));
 
         this.firstRenderedRow = this.state.firstVisibleRow;
@@ -120,9 +120,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
        actually simpler to manage having all this in the same
        component... for now. */
     private renderHeadings(): JSX.Element {
-        let columns: query.ComplexColumnDefinition = this.props.table.select;
+        let columns: query.ComplexColumnDefinition = this.props.query.select;
         let mmaxDepth: number = columns.depth();
-        
+
+        console.log(`maxDepth is ${mmaxDepth}`);
 
         if (columns.isEmpty()) {
             return <></>
@@ -130,8 +131,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             return <> {
                 range(mmaxDepth).map(ddepth =>
                 (<>
-                    {this.renderHeadingsToHtmlAtDepth(columns, ddepth,
-                        mmaxDepth)}
+                    {this.renderHeadingsToHtmlAtDepth(columns, ddepth)}
                 </>
                 ))
             } </>
@@ -142,10 +142,12 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     columns have been expanded. */
     private renderHeadingsToHtmlAtDepth = (
         columns: query.ComplexColumnDefinition,
-        ddepth: number,
-        mmaxDepth: number) => {
-            let widths : number[] = [0, ...columns.map(each => each.width())];
-            
+        ddepth: number) => {
+
+        console.log(`Rendering at depth ${ddepth}`)
+
+        let widths: number[] = [0, ...columns.map(each => each.width())];
+
 
         return (<>
             {columns.map(
@@ -164,16 +166,15 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         widths: number[],
         ddepth: number)
         : JSX.Element {
-        console.log(`Rendering at depth ${ddepth}`)
 
-        let t = this.props.table;
+        let t = this.props.query;
 
         let renderMe: Array<query.ColumnDefinition> =
             columnAtDepth(column, ddepth);
 
         let collapse: JSX.Element;
         if (column.isComplex()) {
-            if (this.props.table.isExpanded(column)) {
+            if (this.props.query.isExpanded(column)) {
                 collapse = miniButton("datatable-expandbutton", "⏷",
                     (e) => this.onUnexpandComplexColumn(e, t, column));
             } else {
@@ -198,14 +199,14 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
-        let gridColumnStart = widths.slice(0, index+1).reduce( (sum, current) => sum+current );
-        let gridColumnEnd = gridColumnStart + widths[index+1];
-        
+        let gridColumnStart = widths.slice(0, index + 1).reduce((sum, current) => sum + current);
+        let gridColumnEnd = gridColumnStart + widths[index + 1];
+
         const layout = {
             gridRowStart: ddepth,
             gridRowEnd: ddepth,
-            gridColumnStart: gridColumnStart+1,
-            gridColumnEnd: gridColumnEnd+1
+            gridColumnStart: gridColumnStart + 1,
+            gridColumnEnd: gridColumnEnd + 1
         }
 
         return (<>
@@ -231,7 +232,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     /** Render only the visible cells. */
     private renderTableContent(): JSX.Element[] {
-        let rows = this.props.table.get(this.firstRenderedRow, this.lastRenderedRow);
+        let rows = this.props.query.get(this.firstRenderedRow, this.lastRenderedRow);
         return (
             rows.map((eachRow, row) =>
                 <>
@@ -288,7 +289,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         column: query.ColumnDefinition
     )
         : void {
-            console.log("Expand " + column.name);
+        console.log("Expand " + column.name);
+        
         this.props.refetch(t.copy().expand(column));
     }
 

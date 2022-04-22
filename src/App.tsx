@@ -33,7 +33,7 @@ class App extends React.Component<AppProps, AppState> {
               return <option key={index} value={index}>{each.name}</option>
             })}
           </select>
-          <DataTable>
+          <DataTable query={this.state.currentQuery}>
           </DataTable>
         </Room>
       </div>

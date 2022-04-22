@@ -151,6 +151,7 @@ export abstract class AbstractQuery implements Query {
 
         // We use this super-column to contain a list of my actual visible columns.
         this._select = new ComplexColumnDefinition("Supercolumn", undefined);
+        this._select.isExpanded = true;
     }
 
     abstract copy() : Query;
@@ -178,18 +179,17 @@ export abstract class AbstractQuery implements Query {
     }
 
     expand(column: ColumnDefinition) {
-        //this._query._expand.add(column);
+        column.isExpanded = true;
         return this;
     }
 
     unexpand(column: ColumnDefinition) {
-        //this._query._expand.add(column);
+        column.isExpanded = false;
         return this;
     }
 
     isExpanded(column: ColumnDefinition): boolean {
-        //return this._query._expand.isExpanded(column);
-        return false;
+        return column.isExpanded==true;
     }
 
     orderBy(column: ColumnDefinition, by: OrderedBy) {
@@ -231,6 +231,7 @@ interface OrderedByEntry {
 
 /* The column heading, and it's type. */
 export abstract class ColumnDefinition {
+    isExpanded: boolean; // Only used by ComplexColumnDefinitions.
     _name: string;
 
     // _type and childColumns are mutually exclusive.
@@ -240,6 +241,7 @@ export abstract class ColumnDefinition {
     constructor(name: string, parent?: ColumnDefinition) {
         this._name = name;
         this._parent = undefined;
+        this.isExpanded = false;
         //this._isCollection = false;
     }
 
@@ -290,12 +292,10 @@ export class PrimitiveColumnDefinition extends ColumnDefinition {
 }
 
 export class ComplexColumnDefinition extends ColumnDefinition {
-    isExpanded: boolean; 
     childColumns: Array<ColumnDefinition>;
 
     constructor(name: string, parent?: ColumnDefinition) {
         super(name, parent);
-        this.isExpanded = false;
         this.childColumns = [];
     }
 

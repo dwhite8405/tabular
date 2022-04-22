@@ -59,15 +59,14 @@ export class CollectionQuery extends AbstractQuery {
     }
 
     orderBy(column: ColumnDefinition, by: OrderedBy) {
-        console.log("Ordering by "+column.name);
         this._orderBy = [{ column: column, orderedBy: by }];
         let i : number = this.columnIndex(column);
         switch (by) {
             case OrderedBy.ASC:
-                this.contents.sort( (a, b) => this.magnitude(a[i] < b[i]) );
+                this.contents.sort( (a, b) => this.magnitude(a[i] > b[i]) );
                 break;
             case OrderedBy.DESC:
-                this.contents.sort( (a, b) => this.magnitude(a[i] > b[i]) );
+                this.contents.sort( (a, b) => this.magnitude(a[i] < b[i]) );
                 break;
             case OrderedBy.NA:
                 break;
@@ -76,7 +75,7 @@ export class CollectionQuery extends AbstractQuery {
         return this;
     }
 
-    magnitude(b : boolean) {
+    private magnitude(b : boolean) {
         switch(b) {
             case true: 
                 return 1;
