@@ -1,4 +1,5 @@
-import { AbstractQuery, PrimitiveColumnDefinition, PrimitiveType, Row, Query, ColumnDefinition, ComplexColumnDefinition } from "./query";
+import { textChangeRangeIsUnchanged } from "typescript";
+import { AbstractQuery, PrimitiveColumnDefinition, PrimitiveType, Row, Query, ColumnDefinition, ComplexColumnDefinition, OrderedBy } from "./query";
 
 interface CollectionQueryColumn {
     name: string;
@@ -55,6 +56,33 @@ export class CollectionQuery extends AbstractQuery {
             let s : any[] = this.contents.slice(from, to);
             let rows : Row[] = s.map(each => { return {cells:each}})
             return rows;
+    }
+
+    orderBy(column: ColumnDefinition, by: OrderedBy) {
+        console.log("Ordering by "+column.name);
+        this._orderBy = [{ column: column, orderedBy: by }];
+        let i : number = this.columnIndex(column);
+        switch (by) {
+            case OrderedBy.ASC:
+                this.contents.sort( (a, b) => this.magnitude(a[i] < b[i]) );
+                break;
+            case OrderedBy.DESC:
+                this.contents.sort( (a, b) => this.magnitude(a[i] > b[i]) );
+                break;
+            case OrderedBy.NA:
+                break;
+        }
+        
+        return this;
+    }
+
+    magnitude(b : boolean) {
+        switch(b) {
+            case true: 
+                return 1;
+            case false:
+                return -1;
+        }        
     }
 
     copy : () => Query = () => {

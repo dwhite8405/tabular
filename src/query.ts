@@ -1,6 +1,42 @@
 /* A "Query" is the model for a data table on the screen. It contains all 
 the state of a query, plus the contents of the current screen-full of data. 
 */
+export interface Query {
+    name: String;
+
+    // "select" is the list of currently visible columns.
+    // It is a tree structure. Expandable columns can be expanded or not expanded.
+    select: ComplexColumnDefinition;
+
+    // "filter" is the filter at the top, or the "WHERE" part of SQL.
+    filter?: FilterClause;
+
+    // "expand" is which hierarchical (sub-)columns are visible.
+    expand(column: ColumnDefinition) : Query;
+    unexpand(column: ColumnDefinition) : Query;
+    isExpanded(column: ColumnDefinition): boolean;
+
+    // "orderBy" is the sort ordering of the table.
+    getOrderBy() : OrderedByEntry[];
+    orderBy(column: ColumnDefinition, by: OrderedBy) : Query;
+    
+    // "count" is the number of rows.
+    count() : number;
+
+    numColumns(): number;
+
+    // Get rows from the table.
+    get(from: number, to: number) : Row[];
+
+    copy() : Query; // Needed to make React prop updates work.
+
+    // Ask the server for a fresh list of column headings.
+    refetchColumns() : void;
+
+    // Ask the server for a fresh list of rows.
+    refetchContents() : void;
+}
+
 
 
 export enum OrderedBy {
@@ -55,42 +91,6 @@ export enum PrimitiveType {
     GeometryCollection, //	Collection of arbitrary Geometry values
 }
 
-export interface Query {
-    name: String;
-
-    // "select" is the list of currently visible columns.
-    // It is a tree structure. Expandable columns can be expanded or not expanded.
-    select: ComplexColumnDefinition;
-
-    // "filter" is the filter at the top, or the "WHERE" part of SQL.
-    filter?: FilterClause;
-
-    // "expand" is which hierarchical (sub-)columns are visible.
-    expand(column: ColumnDefinition) : Query;
-    unexpand(column: ColumnDefinition) : Query;
-    isExpanded(column: ColumnDefinition): boolean;
-
-    // "orderBy" is the sort ordering of the table.
-    getOrderBy() : OrderedByEntry[];
-    orderBy(column: ColumnDefinition, by: OrderedBy) : Query;
-    
-    // "count" is the number of rows.
-    count() : number;
-
-    numColumns(): number;
-
-    // Get rows from the table.
-    get(from: number, to: number) : Row[];
-
-    copy() : Query; // Needed to make React prop updates work.
-
-    // Ask the server for a fresh list of column headings.
-    refetchColumns() : void;
-
-    // Ask the server for a fresh list of rows.
-    refetchContents() : void;
-}
-
 interface FilterClause {
 
 }
@@ -143,7 +143,6 @@ export abstract class AbstractQuery implements Query {
     filter?: any; // TODO
     _search?: string; // TODO - generic string search
     //[key: string]: any;
-
 
     constructor() {
         this._tableName = "";
@@ -209,6 +208,18 @@ export abstract class AbstractQuery implements Query {
 
     refetchColumns() {}
     refetchContents() {}
+
+    columnIndex = (c : ColumnDefinition) => {
+        let i : number = 0;
+        while (i<this._select.columns.length) {
+            if (this._select.columns[i] == c) {
+                return i;
+            } else {
+                i++;
+            }
+        }
+        return -1;
+    }
 
 }
 

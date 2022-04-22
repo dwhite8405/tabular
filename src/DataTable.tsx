@@ -20,9 +20,9 @@ export interface DataTableState {
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
-    // What percentage (actually 0 to 1) of rows to render off-screen as a buffer.
-
     private columnWidths: Array<number>;
+
+    // A mechanism to get to the DOM to get the content div height.
     private contentDivRef: React.RefObject<HTMLDivElement>;
 
     private height: number = 100; // Height in pixels of the visible table contents.
@@ -115,6 +115,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         };
     }
 
+    /* Render the column headings.
+       They could be turned into a seperate component, but it's
+       actually simpler to manage having all this in the same
+       component... for now. */
     private renderHeadings(): JSX.Element {
         let columns: query.ComplexColumnDefinition = this.props.table.select;
         let mmaxDepth: number = columns.depth();
@@ -203,7 +207,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             gridColumnStart: gridColumnStart+1,
             gridColumnEnd: gridColumnEnd+1
         }
-
 
         return (<>
             {renderMe.map(each => {
@@ -299,7 +302,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         this.props.refetch(t.copy().unexpand(column));
     }
 
-
+    // For a discussion of some problems with this:
+    // https://firefox-source-docs.mozilla.org/performance/scroll-linked_effects.html
     handleScroll = (event: React.UIEvent<HTMLDivElement, UIEvent>) => {
         let scrollY = (event.target as any).scrollTop;
         let currentTopVisibleRow = Math.floor(scrollY / this.pixelsPerRow);

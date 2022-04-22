@@ -1,3 +1,5 @@
+Sorting not working.
+
 Expand columns (not working for the 'interesting' demo).
     - Expanded columns must also be movable.
     - Currently working in collectionQuery.ts.
