@@ -68,7 +68,9 @@ class App extends React.Component<AppProps, AppState> {
         {name: 'Float', type:query.PrimitiveType.Decimal}, 
         {name: 'Expandable', contents: [
           {name:'Inside Integer', type:query.PrimitiveType.Int32}, 
-          {name: 'Inside Text', type:query.PrimitiveType.String},
+          {name: 'Inside Text', type:query.PrimitiveType.String, contents: [
+            {name: 'Inside inside text', type:query.PrimitiveType.String}
+          ]},
           {name: 'Inside Date', type:query.PrimitiveType.Date}
         ]},
         {name: 'Text', type:query.PrimitiveType.String},

@@ -4,6 +4,8 @@ import * as query from './query';
 import './App.css';
 import './DataTable.css';
 import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
+import { ColumnDefinition, ComplexColumnDefinition } from './query';
+import { RoomState } from './Room';
 
 // TODO If the size of the contents div changes:
 //  https://www.pluralsight.com/guides/re-render-react-component-on-window-resize
@@ -120,60 +122,36 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
        actually simpler to manage having all this in the same
        component... for now. */
     private renderHeadings(): JSX.Element {
-        let columns: query.ComplexColumnDefinition = this.props.query.select;
-        let mmaxDepth: number = columns.depth();
-
-        console.log(`maxDepth is ${mmaxDepth}`);
-
-        if (columns.isEmpty()) {
-            return <></>
-        } else {
-            return <> {
-                range(mmaxDepth).map(ddepth =>
-                (<>
-                    {this.renderHeadingsToHtmlAtDepth(columns, ddepth)}
-                </>
-                ))
-            } </>
+        let rootColumn: query.ComplexColumnDefinition = this.props.query.select;
+        if (rootColumn.isEmpty()) {
+            return <></>;
         }
-    }
 
-    /* Render one row of the columns. There are multiple rows depending on which
-    columns have been expanded. */
-    private renderHeadingsToHtmlAtDepth = (
-        columns: query.ComplexColumnDefinition,
-        ddepth: number) => {
+        let laidOutColumns: ColumnsLaidOut = ColumnsLaidOut.fromColumnDefinition(rootColumn);
 
-        console.log(`Rendering at depth ${ddepth}`)
+        return <> 
+            laidOutColumns.map(each => {
+                let layout : PositionedHeading = {
+                    gridRowStart: each.row;
+                    gridRowEnd: each.row;
+                    gridColumnStart: each.columnStart + 1;
+                    gridColumnEnd: each.columnStart + 1;
+                };
 
-        let widths: number[] = [0, ...columns.map(each => each.width())];
-
-
-        return (<>
-            {columns.map(
-                (each, i) =>
-                    this.renderHeadingToHtml(
-                        each, i, widths, ddepth)
-            )
-            }
-        </>);
+                return this.renderHeadingToHtml(each.heading, layout);
+            });
+        </>;
     }
 
     /* Render one column heading. */
-    private renderHeadingToHtml(
+    private renderHeadingToHtml = (
         column: query.ColumnDefinition,
-        index: number,
-        widths: number[],
-        ddepth: number)
-        : JSX.Element {
+        layout: any) => {
 
         let t = this.props.query;
 
-        let renderMe: Array<query.ColumnDefinition> =
-            columnAtDepth(column, ddepth);
-
         let collapse: JSX.Element;
-        if (column.isComplex()) {
+        if (column.hasChildren()) {
             if (this.props.query.isExpanded(column)) {
                 collapse = miniButton("datatable-expandbutton", "⏷",
                     (e) => this.onUnexpandComplexColumn(e, t, column));
@@ -181,6 +159,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 collapse = miniButton("datatable-expandbutton", "⏵",
                     (e) => this.onExpandComplexColumn(e, t, column));
             }
+        } else {
+            collapse = <></>;
         }
 
         let orderBy: JSX.Element;
@@ -199,35 +179,20 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
-        let gridColumnStart = widths.slice(0, index + 1).reduce((sum, current) => sum + current);
-        let gridColumnEnd = gridColumnStart + widths[index + 1];
-
-        const layout = {
-            gridRowStart: ddepth,
-            gridRowEnd: ddepth,
-            gridColumnStart: gridColumnStart + 1,
-            gridColumnEnd: gridColumnEnd + 1
-        }
-
-        return (<>
-            {renderMe.map(each => {
-                return <div style={layout}>
-                    <ContextMenuTrigger
-                        id="contextmenu"
-                        holdToDisplay={1000}>
-                        {/* We assume the first child here has data-columnName */}
-                        <div
-                            className="datatable-head-cell"
-                            data-columnname={each.name}>
-                            {collapse}
-                            <span>{each.name}</span>
-                            {orderBy}
-                        </div>
-                    </ContextMenuTrigger>
+        return <div style={layout}>
+            <ContextMenuTrigger
+                id="contextmenu"
+                holdToDisplay={1000}>
+                {/* We assume the first child here has data-columnName */}
+                <div
+                    className="datatable-head-cell"
+                    data-columnname={column.name}>
+                    {collapse}
+                    <span>{column.name}</span>
+                    {orderBy}
                 </div>
-            }
-            )}
-        </>);
+            </ContextMenuTrigger>
+        </div>;
     }
 
     /** Render only the visible cells. */
@@ -290,7 +255,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     )
         : void {
         console.log("Expand " + column.name);
-        
+
         this.props.refetch(t.copy().expand(column));
     }
 
@@ -341,23 +306,91 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 }
 
 
-/** Used to render hierarchical headings. */
-function columnAtDepth(
-    column: query.ColumnDefinition,
-    ddepth: number)
-    : Array<query.ColumnDefinition> {
-    if (1 === ddepth) {
-        return [column];
-    } else {
-        if (column.isComplex()) {
-            let children: Array<query.ColumnDefinition> =
-                column.childs();
-            return flatten(
-                children.map(columnAtDepth)
-            );
-        } else {
-            return []; // We are below the depth of a primitive column.
+private interface PositionedHeading {
+    columnStart: number;
+    columnEnd: number;
+    row: number;
+    columnDefinition: ColumnDefinition;
+}
+
+/* I'm a processed copy of the columns to make rendering easier. Instead of a tree, I'm 
+organised by row of columns. 
+
+To be honest, I'm really just a 2D array.
+*/
+private class ColumnsLaidOut {
+    private columnRows: Array<Array<ColumnDefinition | undefined>> = [];
+
+    static fromColumnDefinition(root: ComplexColumnDefinition): ColumnsLaidOut {
+        let result: ColumnsLaidOut = new ColumnsLaidOut();
+        let rightEdge: number[] = [0]; // I'm a container for a mutable value.
+        this.fromColumnDefinitionImpl(root, 0, rightEdge, result);
+        return result;
+    }
+
+    static fromColumnDefinitionImpl(
+        root: ComplexColumnDefinition,
+        depth: number,
+        rightEdge: number[],
+        result: ColumnsLaidOut) {
+        for (let each of root.childs()) {
+            result.put(rightEdge[0], depth, each);
+            if (each instanceof ComplexColumnDefinition && each.isExpanded) {
+                this.fromColumnDefinitionImpl(each, depth + 1, rightEdge, result);
+            }
+            rightEdge[0] = rightEdge[0] + 1;
         }
+    }
+
+    /* Put that object at x,y. I'm effectively a 2D array. Pad with undefineds when necessary. */
+    put = (x: number, y: number, me: ColumnDefinition) => {
+        while (this.columnRows.length <= y) {
+            this.columnRows.push([]);
+        }
+        let myRow = this.columnRows[y];
+        while (myRow.length <= x) {
+            myRow.push(undefined);
+        }
+        myRow[x] = me;
+    }
+
+    map(
+        callbackfn: (value: ColumnDefinition, index: number, array: ColumnDefinition[]) => PositionedHeading,
+        thisArg?: any)
+        : PositionedHeading[] {
+        let result: PositionedHeading[] = [];
+        let y: number = 0;
+        for (let row of this.columnRows) {
+            for (let x: number in row) {
+                let r: ColumnDefinition;
+                if (undefined !== row[x]) {
+                    r = row[x];
+                } else {
+                    continue;
+                }
+
+                if (undefined !== row[x]) {
+                    let thisWidth = 1;
+                    while (undefined === row[x + thisWidth]) {
+                        thisWidth++;
+                    }
+
+                    let x: number = 1;
+                    result.push({
+                        columnStart: x,
+                        columnEnd: x + thisWidth,
+                        row: y,
+                        columnDefinition: r
+                    });
+                }
+            }
+            y++;
+        }
+        return result;
+    }
+
+    get = (x: number, y: number) => {
+        return this.columnRows[y][x];
     }
 }
 

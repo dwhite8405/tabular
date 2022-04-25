@@ -245,7 +245,7 @@ export abstract class ColumnDefinition {
         //this._isCollection = false;
     }
 
-    abstract isComplex(): boolean;
+    abstract hasChildren(): boolean;
 
     get name(): string {
         return this._name;
@@ -264,7 +264,7 @@ export abstract class ColumnDefinition {
         return 1;
     }
 
-    // If I am expanded, how many heading rows deep am I?
+    // How many columns are below me.
     depth(): number {
         return 1;
     }
@@ -272,6 +272,8 @@ export abstract class ColumnDefinition {
     numColumns() : number { 
         return 1;
     }
+
+    abstract columnsAtDepthImpl(atDepth: Number, myDepth: number, result:ColumnDefinition[]) : void;
 }
 
 export class PrimitiveColumnDefinition extends ColumnDefinition {
@@ -286,20 +288,24 @@ export class PrimitiveColumnDefinition extends ColumnDefinition {
         }
     }
 
-    isComplex() : boolean {
+    hasChildren() : boolean {
         return false;
     }
+
+    columnsAtDepthImpl = (atDepth: number, myDepth: number, result:ColumnDefinition[]) => {
+    }
+
 }
 
 export class ComplexColumnDefinition extends ColumnDefinition {
-    childColumns: Array<ColumnDefinition>;
+    childColumns: ColumnDefinition[];
 
     constructor(name: string, parent?: ColumnDefinition) {
         super(name, parent);
         this.childColumns = [];
     }
 
-    isComplex() : boolean {
+    hasChildren() : boolean {
         return true;
     }
 
@@ -321,6 +327,7 @@ export class ComplexColumnDefinition extends ColumnDefinition {
         return totalWidth;    
     }
 
+    /* How many columns are below me. NOT how deep I am. */
     depth() : number {
         if (!this.isExpanded) {
             return 1;
@@ -333,7 +340,7 @@ export class ComplexColumnDefinition extends ColumnDefinition {
                 maxDepth = current;
             }
         }
-        return maxDepth + 1;
+        return maxDepth+1;
     }
 
     map<U>(callbackfn: (value: ColumnDefinition, index: number, array: ColumnDefinition[]) => U, thisArg?: any): U[] {
@@ -359,6 +366,23 @@ export class ComplexColumnDefinition extends ColumnDefinition {
         }
         return Math.max(1, sum);
     }
+
+    columnsAtDepth = (atDepth: number) => {
+        let result : ColumnDefinition[] = [];
+        this.columnsAtDepthImpl(atDepth, 0, result);
+        return result;
+    }
+
+    columnsAtDepthImpl = (atDepth: number, myDepth: number, result:ColumnDefinition[]) => {
+        if (atDepth==myDepth) {
+            result.push(this.childColumns);
+        } else {
+            this.childColumns.map(each => {
+                each.columnsAtDepthImpl(atDepth, myDepth+1, result);
+            });
+        }
+    }
+
 }
 
 
