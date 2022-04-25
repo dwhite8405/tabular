@@ -272,8 +272,6 @@ export abstract class ColumnDefinition {
     numColumns() : number { 
         return 1;
     }
-
-    abstract columnsAtDepthImpl(atDepth: Number, myDepth: number, result:ColumnDefinition[]) : void;
 }
 
 export class PrimitiveColumnDefinition extends ColumnDefinition {
@@ -366,23 +364,6 @@ export class ComplexColumnDefinition extends ColumnDefinition {
         }
         return Math.max(1, sum);
     }
-
-    columnsAtDepth = (atDepth: number) => {
-        let result : ColumnDefinition[] = [];
-        this.columnsAtDepthImpl(atDepth, 0, result);
-        return result;
-    }
-
-    columnsAtDepthImpl = (atDepth: number, myDepth: number, result:ColumnDefinition[]) => {
-        if (atDepth==myDepth) {
-            result.push(this.childColumns);
-        } else {
-            this.childColumns.map(each => {
-                each.columnsAtDepthImpl(atDepth, myDepth+1, result);
-            });
-        }
-    }
-
 }
 
 
