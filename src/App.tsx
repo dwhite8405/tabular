@@ -44,8 +44,8 @@ class App extends React.Component<AppProps, AppState> {
     let q1 : query.Query = ODataQuery.create(this.url, this.tableName);
     let q2 : query.Query = new CollectionQuery(
       [{name:'foo'}, {name: 'bar'}, {name: 'baz'}], 
-      range(20000).map(each => [each, each+100, each+10000]));
-      q2.name = "20000 items.";
+      range(200000).map(each => [each, each+100, each+10000]));
+      q2.name = "200000 items.";
     let q3: query.Query = this.makeBigLocalInterestingQuery();
     return [q3, q2, q1];
   }

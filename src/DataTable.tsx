@@ -132,10 +132,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         return <>{
             laidOutColumns.map(each => {
                 let layout = {
-                    gridRowStart: each.row,
-                    gridRowEnd: each.row,
+                    gridRowStart: each.row+1,
+                    gridRowEnd: each.row+2,
                     gridColumnStart: each.columnStart + 1,
-                    gridColumnEnd: each.columnStart + 1
+                    gridColumnEnd: each.columnEnd + 2
                 };
 
                 return this.renderHeadingToHtml(each.columnDefinition, layout);
@@ -328,16 +328,17 @@ class ColumnsLaidOut {
     }
 
     static fromColumnDefinitionImpl(
-        root: ComplexColumnDefinition,
+        column: ComplexColumnDefinition,
         depth: number,
         rightEdge: number[],
         result: ColumnsLaidOut) {
-        for (let each of root.childs()) {
+        for (let each of column.childs()) {
             result.put(rightEdge[0], depth, each);
             if (each instanceof ComplexColumnDefinition && each.isExpanded) {
                 this.fromColumnDefinitionImpl(each, depth + 1, rightEdge, result);
+            } else {
+                rightEdge[0] = rightEdge[0] + 1;
             }
-            rightEdge[0] = rightEdge[0] + 1;
         }
     }
 
@@ -353,6 +354,7 @@ class ColumnsLaidOut {
         myRow[x] = me;
     }
 
+    /* Map a function, passing a PositionedHeading in. */
     map<U>(
         callbackfn: (value: PositionedHeading, index: number, array: PositionedHeading[]) => U,
         thisArg?: any)

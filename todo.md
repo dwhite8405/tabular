@@ -29,3 +29,4 @@ Footer with selectable sums/count/...
 
 Editing
 
+Check grid behavior in RTL languages, e.g. Arabic.
