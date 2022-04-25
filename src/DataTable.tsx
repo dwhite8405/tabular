@@ -371,7 +371,7 @@ class ColumnsLaidOut {
                 }
 
                 let thisWidth = 0;
-                while (undefined === row[x + thisWidth]) {
+                while (undefined === row[1+x + thisWidth]) {
                     thisWidth++;
                 }
 
