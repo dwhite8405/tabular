@@ -370,8 +370,9 @@ class ColumnsLaidOut {
                     continue;
                 }
 
+                // The width of a row includes all the "undefined" columns after it.
                 let thisWidth = 0;
-                while (undefined === row[1+x + thisWidth]) {
+                while (1+x+thisWidth < row.length && undefined === row[1+x+thisWidth]) {
                     thisWidth++;
                 }
 
