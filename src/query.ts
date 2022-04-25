@@ -232,6 +232,7 @@ interface OrderedByEntry {
 /* The column heading, and it's type. */
 export abstract class ColumnDefinition {
     isExpanded: boolean; // Only used by ComplexColumnDefinitions.
+    columnNumber: number = 0;
     _name: string;
 
     // _type and childColumns are mutually exclusive.
@@ -272,6 +273,8 @@ export abstract class ColumnDefinition {
     numColumns() : number { 
         return 1;
     }
+
+    abstract renumberColumnsImpl(from: number[]) : void;
 }
 
 export class PrimitiveColumnDefinition extends ColumnDefinition {
@@ -290,9 +293,10 @@ export class PrimitiveColumnDefinition extends ColumnDefinition {
         return false;
     }
 
-    columnsAtDepthImpl = (atDepth: number, myDepth: number, result:ColumnDefinition[]) => {
+    renumberColumnsImpl = (from:number[]) => {
+        this.columnNumber = from[0];
+        from[0] = from[0]+1;
     }
-
 }
 
 export class ComplexColumnDefinition extends ColumnDefinition {
@@ -363,6 +367,15 @@ export class ComplexColumnDefinition extends ColumnDefinition {
             sum = sum + this.childColumns[i].numColumns();
         }
         return Math.max(1, sum);
+    }
+
+    /* Re-number the columns and populate this.columnNumber */
+    renumberColumns = () => { this.renumberColumnsImpl([0]); }
+
+    renumberColumnsImpl = (from: number[]) => {
+        for(let each of this.childColumns) {
+            each.renumberColumnsImpl(from);
+        }
     }
 }
 

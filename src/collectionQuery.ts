@@ -53,38 +53,29 @@ export class CollectionQuery extends AbstractQuery {
 
     get: (from: number, to: number) => Row[] = 
         (from: number, to: number) => {
+            this._select.renumberColumns();
             let s : any[] = this.contents.slice(from, to);
             let result : Row[] = [];
             for (let each of s) {
                 let cells : any[] = [];
-                for (let eachColumn of this._select.childs()) {
-                    this.addCells(each, eachColumn, cells);
-                }
+                this.addCells(each, this._select, cells);
+                result.push({cells:cells});
             }
 
-
-            let rows : Row[] = s.map(each => { return {cells:each}})
-            return rows; 
+            return result;
     }
 
-    private addCells(object:any, column: ColumnDefinition, cells: any[]) {
-
-        working here.
-
-        if (column.isExpanded) {
-            for(let each of column.childs()) {
-                if (undefined===object) {
-                    cells.push("Undefinedx")
-                } else {
-                    this.addCells(object[each.name], each, cells);
-                }
-            }
-        } else {
-            if (undefined===object) {
-                cells.push("Undefinedx");
+    private addCells(source:any[], column: ColumnDefinition, cells: any[]) {
+        for(let i in column.childs()) {
+            let c = column.childs()[i];
+            if (c.isExpanded) {
+                this.addCells(source[i], c, cells);
             } else {
-                let value = object[column.name];
-                cells.push(value);
+                if (undefined===source) {
+                    cells.push("Undefinedx");
+                } else {
+                    cells.push(source[i]);
+                }
             }
         }
     }

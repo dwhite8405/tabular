@@ -58,7 +58,7 @@ class App extends React.Component<AppProps, AppState> {
       let float = index+(1/index);
       let text = "abcd"+index;
       let expandable = [integer+10, `inside ${text}`, 'inside date'];
-      return [integer, float, [expandable, expandable, expandable], 
+      return [integer, float, expandable, 
         text, "a date", "a select"];
     });
 
