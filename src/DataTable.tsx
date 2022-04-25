@@ -138,7 +138,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                     gridColumnEnd: each.columnEnd + 2
                 };
 
-                return this.renderHeadingToHtml(each.columnDefinition, layout);
+                let key = `G${each.row}|${each.columnStart}|${each.columnEnd}`
+
+                return this.renderHeadingToHtml(each.columnDefinition, layout, key);
             })
         }</>;
     }
@@ -146,7 +148,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     /* Render one column heading. */
     private renderHeadingToHtml = (
         column: query.ColumnDefinition,
-        layout: any) => {
+        layout: any,
+        key: string) => {
 
         let t = this.props.query;
 
@@ -179,7 +182,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
-        return <div style={layout}>
+        return <div style={layout} key={key}>
             <ContextMenuTrigger
                 id="contextmenu"
                 holdToDisplay={1000}>
@@ -206,9 +209,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                             overflowX: "hidden",
                             height: this.pixelsPerRow,
                             gridRowStart: row + 1,
-                            gridRowEnd: row + 1,
+                            gridRowEnd: row + 2,
                             gridColumnStart: column + 1,
-                            gridColumnEnd: column + 1,
+                            gridColumnEnd: column + 2,
                             whiteSpace: 'nowrap',
                             backgroundColor: "red",
                             textAlign: "right" // It would be nice to making decimal points match.
