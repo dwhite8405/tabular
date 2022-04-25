@@ -129,18 +129,18 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
         let laidOutColumns: ColumnsLaidOut = ColumnsLaidOut.fromColumnDefinition(rootColumn);
 
-        return <> 
+        return <>{
             laidOutColumns.map(each => {
-                let layout : PositionedHeading = {
-                    gridRowStart: each.row;
-                    gridRowEnd: each.row;
-                    gridColumnStart: each.columnStart + 1;
-                    gridColumnEnd: each.columnStart + 1;
+                let layout = {
+                    gridRowStart: each.row,
+                    gridRowEnd: each.row,
+                    gridColumnStart: each.columnStart + 1,
+                    gridColumnEnd: each.columnStart + 1
                 };
 
-                return this.renderHeadingToHtml(each.heading, layout);
-            });
-        </>;
+                return this.renderHeadingToHtml(each.columnDefinition, layout);
+            })
+        }</>;
     }
 
     /* Render one column heading. */
@@ -305,8 +305,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 }
 
-
-private interface PositionedHeading {
+interface PositionedHeading {
     columnStart: number;
     columnEnd: number;
     row: number;
@@ -318,7 +317,7 @@ organised by row of columns.
 
 To be honest, I'm really just a 2D array.
 */
-private class ColumnsLaidOut {
+class ColumnsLaidOut {
     private columnRows: Array<Array<ColumnDefinition | undefined>> = [];
 
     static fromColumnDefinition(root: ComplexColumnDefinition): ColumnsLaidOut {
@@ -354,35 +353,36 @@ private class ColumnsLaidOut {
         myRow[x] = me;
     }
 
-    map(
-        callbackfn: (value: ColumnDefinition, index: number, array: ColumnDefinition[]) => PositionedHeading,
+    map<U>(
+        callbackfn: (value: PositionedHeading, index: number, array: PositionedHeading[]) => U,
         thisArg?: any)
-        : PositionedHeading[] {
-        let result: PositionedHeading[] = [];
+        : U[] {
+        let result: U[] = [];
         let y: number = 0;
-        for (let row of this.columnRows) {
-            for (let x: number in row) {
+        for (let rowIter of this.columnRows) {
+            // This code is funky because I'm having compiler issues.
+            let row: Array<ColumnDefinition | undefined> = rowIter;
+            for (let x: number = 0; x < row.length; x++) {
                 let r: ColumnDefinition;
                 if (undefined !== row[x]) {
-                    r = row[x];
+                    r = row[x] as ColumnDefinition;
                 } else {
                     continue;
                 }
 
-                if (undefined !== row[x]) {
-                    let thisWidth = 1;
-                    while (undefined === row[x + thisWidth]) {
-                        thisWidth++;
-                    }
-
-                    let x: number = 1;
-                    result.push({
-                        columnStart: x,
-                        columnEnd: x + thisWidth,
-                        row: y,
-                        columnDefinition: r
-                    });
+                let thisWidth = 0;
+                while (undefined === row[x + thisWidth]) {
+                    thisWidth++;
                 }
+
+                let value = {
+                    columnStart: x,
+                    columnEnd: x + thisWidth,
+                    row: y,
+                    columnDefinition: r
+                };
+                let resultValue = callbackfn(value, x, [value]);
+                result.push(resultValue);
             }
             y++;
         }
