@@ -152,6 +152,8 @@ export abstract class AbstractQuery implements Query {
         // We use this super-column to contain a list of my actual visible columns.
         this._select = new ComplexColumnDefinition("Supercolumn", undefined);
         this._select.isExpanded = true;
+        this.copyFrom = this.copyFrom.bind(this);
+        this.orderBy = this.orderBy.bind(this);
     }
 
     abstract copy() : Query;
@@ -178,12 +180,12 @@ export abstract class AbstractQuery implements Query {
         return this._orderBy;
     }
 
-    expand(column: ColumnDefinition) {
+    expand = (column: ColumnDefinition) => {
         column.isExpanded = true;
         return this;
     }
 
-    unexpand(column: ColumnDefinition) {
+    unexpand = (column: ColumnDefinition) => {
         column.isExpanded = false;
         return this;
     }
@@ -378,8 +380,6 @@ export class ComplexColumnDefinition extends ColumnDefinition {
         }
     }
 }
-
-
 
 export interface Row {
     cells: Array<any>;

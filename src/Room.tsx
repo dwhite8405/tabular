@@ -26,7 +26,7 @@ export class Room extends React.Component<RoomProps, RoomState> {
         this.render = this.render.bind(this);
     }
 
-    componentDidMount() {
+    componentDidMount = () => {
         this.refetch(this.state.query.copy());
     }
 
@@ -36,11 +36,11 @@ export class Room extends React.Component<RoomProps, RoomState> {
         }
     }
 
-    async refetch(table: query.Query) {
-        await table.refetchColumns();
-        this.setState({ query: table }); // Show the columns.
-        await table.refetchContents();
-        this.setState({ query: table }); // Show the contents.
+    refetch(q: query.Query) {
+        q.refetchColumns();
+        this.setState({ query: q }); // Show the columns.
+        q.refetchContents();
+        this.setState({ query: q }); // Show the contents.
     }
 
     //React.Children.forEach(children, (each) => console.log("Child: "+each));
@@ -48,6 +48,6 @@ export class Room extends React.Component<RoomProps, RoomState> {
     render() {
         return React.Children.map(this.props.children, (each) =>
             React.cloneElement(each as React.ReactElement<any>,
-                { table: this.state.query, refetch: this.refetch }));
+                { query: this.state.query, refetch: this.refetch }));
     }
 }

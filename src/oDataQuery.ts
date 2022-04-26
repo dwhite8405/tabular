@@ -21,6 +21,7 @@ export class ODataQuery extends AbstractQuery {
         this._contents = [];
         this.url = this.url.bind(this);
         this.copy = this.copy.bind(this);
+        this.copyFrom = this.copyFrom.bind(this);
         this.refetchColumns = this.refetchColumns.bind(this);
         this.refetchContents = this.refetchContents.bind(this);
     }

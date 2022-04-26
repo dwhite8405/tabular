@@ -33,6 +33,7 @@ export class CollectionQuery extends AbstractQuery {
         super();
         this.addColumns(columns, this.select.columns);
         this.contents = contents;
+        this.orderBy = this.orderBy.bind(this);
     }
 
     private addColumns = (defs: CollectionColumnDefs[], columns: ColumnDefinition[], parent?: ColumnDefinition) => {
@@ -65,7 +66,7 @@ export class CollectionQuery extends AbstractQuery {
             return result;
     }
 
-    private addCells(source:any[], column: ColumnDefinition, cells: any[]) {
+    private addCells = (source:any[], column: ColumnDefinition, cells: any[]) => {
         for(let i in column.childs()) {
             let c = column.childs()[i];
             if (c.isExpanded) {
@@ -80,8 +81,8 @@ export class CollectionQuery extends AbstractQuery {
         }
     }
 
-    orderBy(column: ColumnDefinition, by: OrderedBy) {
-        this._orderBy = [{ column: column, orderedBy: by }];
+    public orderBy(column: ColumnDefinition, by: OrderedBy) {
+        super.orderBy(column, by);
         let i : number = this.columnIndex(column);
         switch (by) {
             case OrderedBy.ASC:

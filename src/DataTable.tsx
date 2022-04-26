@@ -166,18 +166,18 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             collapse = <></>;
         }
 
-        let orderBy: JSX.Element;
+        let xorderBy: JSX.Element;
         switch (query.orderedBy(t, column)) {
             case query.OrderedBy.ASC:
-                orderBy = miniButton("datatable-sortbutton", "◢", (e) =>
+                xorderBy = miniButton("datatable-sortbutton", "◢", (e) =>
                     this.onOrderBy(e, t, column, query.OrderedBy.DESC));
                 break;
             case query.OrderedBy.DESC:
-                orderBy = miniButton("datatable-sortbutton", "◥", (e) =>
+                xorderBy = miniButton("datatable-sortbutton", "◥", (e) =>
                     this.onOrderBy(e, t, column, query.OrderedBy.NA));
                 break;
             default:
-                orderBy = miniButton("datatable-sortbutton", "◇", (e) =>
+                xorderBy = miniButton("datatable-sortbutton", "◇", (e) =>
                     this.onOrderBy(e, t, column, query.OrderedBy.ASC));
                 break;
         }
@@ -192,7 +192,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                     data-columnname={column.name}>
                     {collapse}
                     <span>{column.name}</span>
-                    {orderBy}
+                    {xorderBy}
                 </div>
             </ContextMenuTrigger>
         </div>;
@@ -246,6 +246,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         orderBy: query.OrderedBy
     )
         : void {
+        console.log(`Ordering by ${orderBy}`);
         let t2 = t.copy();
         t2.orderBy(column, orderBy);
         this.props.refetch(t2);
