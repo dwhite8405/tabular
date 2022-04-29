@@ -182,7 +182,14 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
-        return <div style={layout} key={key}>
+        return <div 
+            id={`heading_${column.name}`}
+            style={layout} 
+            key={key} 
+            draggable={true} 
+            onDragStart={this.onHeadingDragStart}
+            onDrop={this.onHeadingDrop}
+            onDragOver={this.onHeadingDragOver}>
             <ContextMenuTrigger
                 id="contextmenu"
                 holdToDisplay={1000}>
@@ -306,6 +313,26 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         let columnHeading: string | null = target.getAttribute("data-column-heading");
 
         alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnname')}`)
+    }
+
+    // DragEventHandler<HTMLDivElement> | undefined;
+    onHeadingDragStart(ev: React.DragEvent<HTMLDivElement>) {
+        //ev.preventDefault();
+        const id = (ev.target as HTMLDivElement).id;
+        console.log(`Drag: ${id}`)
+        ev.dataTransfer.setData("text", id);
+    }
+
+    // DragEventHandler<HTMLDivElement> | undefined;
+    onHeadingDrop(ev: React.DragEvent<HTMLDivElement>) {
+        ev.preventDefault();
+        let data = ev.dataTransfer.getData("text");
+        console.log(`Drop: ${(ev.currentTarget as HTMLDivElement).id} got data ${data}`);
+    }
+
+    // DragEventHandler<HTMLDivElement> | undefined;
+    onHeadingDragOver(ev: React.DragEvent<HTMLDivElement>) {
+        ev.preventDefault();
     }
 }
 
