@@ -129,6 +129,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
         let laidOutColumns: ColumnsLaidOut = ColumnsLaidOut.fromColumnDefinition(rootColumn);
 
+        // TODO: working here. Add divs with position:absolute as the drop markers for a column.
         return <>{
             laidOutColumns.map(each => {
                 let layout = {
@@ -139,7 +140,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 };
 
                 let key = `G${each.row}|${each.columnStart}|${each.columnEnd}`
-
                 return this.renderHeadingToHtml(each.columnDefinition, layout, key);
             })
         }</>;
