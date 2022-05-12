@@ -3,7 +3,7 @@ import { CollectionQuery } from './collectionQuery';
 import * as query from './query';
 import './App.css';
 import './DataTable.css';
-import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
+//import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
 import { ColumnDefinition, ComplexColumnDefinition } from './query';
 import { RoomState } from './Room';
 
@@ -18,7 +18,8 @@ export interface DataTableProps {
 }
 
 export interface DataTableState {
-    firstVisibleRow: number; // Index of the row at the top of the visible table.
+    firstVisibleRow: number; // Index of the row at the top of the visible table.  
+    dropColumnMarkerPosition: number | null;
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
@@ -40,7 +41,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         super(props);
         this.columnWidths = [];
         this.state = {
-            firstVisibleRow: 0
+            firstVisibleRow: 0,
+            dropColumnMarkerPosition: null
         };
         this.contentDivRef = React.createRef();
 
@@ -65,6 +67,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
         this.firstRenderedRow = this.state.firstVisibleRow;
         this.lastRenderedRow = this.state.firstVisibleRow + this.numVisibleRows + 2;
+
 
         return (
             <div className="datatable">
@@ -99,7 +102,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                         </div>
                     </div>
                 </div>
-                {this.contextMenus()}
+                {/*this.contextMenus()*/}
             </div>
         );
     }
@@ -182,6 +185,13 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
+        /* TODO: It looks like this package bit-rotted.
+        Maybe implement it myself. 
+        <ContextMenuTrigger
+        id="contextmenu"
+        holdToDisplay={1000}>
+        */
+
         return <div 
             id={`heading_${column.name}`}
             style={layout} 
@@ -190,9 +200,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             onDragStart={this.onHeadingDragStart}
             onDrop={this.onHeadingDrop}
             onDragOver={this.onHeadingDragOver}>
-            <ContextMenuTrigger
-                id="contextmenu"
-                holdToDisplay={1000}>
                 {/* We assume the first child here has data-columnName */}
                 <div
                     className="datatable-head-cell"
@@ -201,7 +208,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                     <span>{column.name}</span>
                     {xorderBy}
                 </div>
-            </ContextMenuTrigger>
         </div>;
     }
 
@@ -298,6 +304,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
+    /*
     contextMenus = () => {
         return <ContextMenu id="contextmenu">
             <MenuItem data={{ foo: 'bar' }} onClick={this.contextMenuOnClick}>
@@ -313,7 +320,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         let columnHeading: string | null = target.getAttribute("data-column-heading");
 
         alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnname')}`)
-    }
+    }*/
 
     // DragEventHandler<HTMLDivElement> | undefined;
     onHeadingDragStart(ev: React.DragEvent<HTMLDivElement>) {
