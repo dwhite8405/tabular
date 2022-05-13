@@ -280,7 +280,9 @@ export abstract class ColumnDefinition {
     }
 
     set pixelWidth(width: number) {
-        this._pixelWidth = width;
+        if (width > 3) {
+            this._pixelWidth = width;
+        }
     }
 
     // How many columns are below me.

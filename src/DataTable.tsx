@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
 import { CollectionQuery } from './collectionQuery';
 import * as query from './query';
 import './App.css';
@@ -20,7 +20,7 @@ export interface DataTableProps {
 export interface DataTableState {
     firstVisibleRow: number; // Index of the row at the top of the visible table.  
     dropColumnMarkerPosition: number | null;
-    isResizingColumn: boolean; // Are we currently resizing a column?
+    resizingColumn?: ColumnDefinition; // null, or which column we're resizing.
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
@@ -43,7 +43,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         this.columnWidths = [];
         this.state = {
             firstVisibleRow: 0,
-            dropColumnMarkerPosition: null
+            dropColumnMarkerPosition: null,
+            resizingColumn: undefined
         };
         this.contentDivRef = React.createRef();
 
@@ -71,7 +72,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
 
         return (
-            <div className="datatable">
+            <div className="datatable"
+                onMouseMove={this.maybeResizeColumn}
+                onMouseUp={this.stopResizeColumn}
+                onMouseLeave={this.stopResizeColumn}>
                 {/* The "filter" box above the table. */}
                 <div className="datatable-filterdiv">
                     Filter
@@ -137,8 +141,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         return <>{
             laidOutColumns.map(each => {
                 let layout = {
-                    gridRowStart: each.row+1,
-                    gridRowEnd: each.row+2,
+                    gridRowStart: each.row + 1,
+                    gridRowEnd: each.row + 2,
                     gridColumnStart: each.columnStart + 1,
                     gridColumnEnd: each.columnEnd + 2
                 };
@@ -186,6 +190,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 break;
         }
 
+        // We need to do this to make the absolute positioning of the resize grip work.
+        layout['position']='relative';
+
         /* TODO: It looks like this package bit-rotted.
         Maybe implement it myself. 
         <ContextMenuTrigger
@@ -193,28 +200,45 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         holdToDisplay={1000}>
         */
 
-        return <div 
+        return <div
             id={`heading_${column.name}`}
-            style={layout} 
-            key={key} 
-            draggable={true} 
-            onDragStart={this.onHeadingDragStart}
-            onDrop={this.onHeadingDrop}
-            onDragOver={this.onHeadingDragOver}>
-                {/* We assume the first child here has data-columnName */}
-                <div
-                    className="datatable-head-cell"
-                    data-columnname={column.name}>
-                    {collapse}
-                    <span>{column.name}</span>
-                    {xorderBy}
-                </div>
+            style={layout}
+            key={key}>
+            {/* We assume the first child here has data-columnName */}
+            <div
+                className="datatable-head-cell"
+                data-columnname={column.name}
+                draggable={true}
+                onDragStart={this.onHeadingDragStart}
+                onDrop={this.onHeadingDrop}
+                onDragOver={this.onHeadingDragOver}>
+                {collapse}
+                <span>{column.name}</span>
+                {xorderBy}
+               
+            </div>
+            {/* A mini div to drag-resize columns. */}
+            <div style={{
+                position: 'absolute',
+                width: 6,
+                height: '100%',
+                right: 0,
+                top: 0,
+                cursor: 'w-resize',     
+            }} onMouseDown={(ev)=>this.startResizeColumn(ev, column)}>
+            </div>
         </div>;
     }
 
     /** Render only the visible cells. */
     private renderTableContent(): JSX.Element[] {
         let rows = this.props.query.get(this.firstRenderedRow, this.lastRenderedRow);
+        let bgColor : string;
+        if (this.state.resizingColumn) {
+            bgColor = 'red';
+        } else {
+            bgColor = 'pink';
+        }
         return (
             rows.map((eachRow, row) =>
                 <>
@@ -227,7 +251,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                             gridColumnStart: column + 1,
                             gridColumnEnd: column + 2,
                             whiteSpace: 'nowrap',
-                            backgroundColor: "red",
+                            backgroundColor: bgColor,
                             textAlign: "right" // It would be nice to making decimal points match.
                         }
                         return <div key={`R${row}C${column}`}
@@ -343,12 +367,29 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         ev.preventDefault();
     }
 
-    onColumnResize(ev: React.DragEvent<HTMLDivElement>) {
-        //ev.preventDefault();
-        const id = (ev.target as HTMLDivElement).id;
-        console.log(`Drag: ${id} to ${ev.clientX}`); 
+    maybeResizeColumn: MouseEventHandler<HTMLDivElement> = (ev) => {
+        if (this.state.resizingColumn) {
+            ev.preventDefault(); // Stop us from selecting text.
+            let columnLeft = this.props.query.columns
+                .slice(0, this.state.resizingColumn.columnNumber    )
+                .map(each => each.pixelWidth)
+                .reduce((x,y) => x+y, 0);
+
+            this.state.resizingColumn.pixelWidth = ev.clientX - columnLeft;
+            // TODO: use React properly here. Make header components.
+            console.log(`Resizing to ${ev.clientX} - ${columnLeft}`);
+            this.setState(this.state);
+        }
     }
 
+    startResizeColumn = (ev: React.MouseEvent<HTMLDivElement>, column : ColumnDefinition) => {
+        ev.preventDefault(); // Stop us from selecting text instead.
+        this.setState({ resizingColumn: column });
+    }   
+
+    stopResizeColumn: MouseEventHandler<HTMLDivElement> = (ev) => {
+        this.setState({ resizingColumn: undefined });
+    }
 }
 
 interface PositionedHeading {
@@ -420,7 +461,7 @@ class ColumnsLaidOut {
 
                 // The width of a row includes all the "undefined" columns after it.
                 let thisWidth = 0;
-                while (1+x+thisWidth < row.length && undefined === row[1+x+thisWidth]) {
+                while (1 + x + thisWidth < row.length && undefined === row[1 + x + thisWidth]) {
                     thisWidth++;
                 }
 
@@ -441,6 +482,8 @@ class ColumnsLaidOut {
     get = (x: number, y: number) => {
         return this.columnRows[y][x];
     }
+
+
 }
 
 export function range(to: number) {
