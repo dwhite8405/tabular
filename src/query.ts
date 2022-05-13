@@ -1,3 +1,5 @@
+import { resourceLimits } from "worker_threads";
+
 /* A "Query" is the model for a data table on the screen. It contains all 
 the state of a query, plus the contents of the current screen-full of data. 
 */
@@ -23,6 +25,7 @@ export interface Query {
     // "count" is the number of rows.
     count() : number;
 
+    get columns() : ColumnDefinition[];
     numColumns(): number;
 
     // Get rows from the table.
@@ -201,6 +204,10 @@ export abstract class AbstractQuery implements Query {
 
     abstract count() : number ;
 
+    get columns() : ColumnDefinition[] {
+        return this._select.childColumns;
+    }
+
     numColumns : () => number = () => {
         return this._select.numColumns();
     }
@@ -236,6 +243,7 @@ export abstract class ColumnDefinition {
     isExpanded: boolean; // Only used by ComplexColumnDefinitions.
     columnNumber: number = 0;
     _name: string;
+    _pixelWidth: number = 100;
 
     // _type and childColumns are mutually exclusive.
     _parent?: ColumnDefinition;
@@ -263,8 +271,16 @@ export abstract class ColumnDefinition {
     }
 
     // If I am expanded, how many columns wide am I on the screen?
-    width(): number { 
+    columnsAcross(): number { 
         return 1;
+    }
+
+    get pixelWidth () : number {
+        return this._pixelWidth;
+    }
+
+    set pixelWidth(width: number) {
+        this._pixelWidth = width;
     }
 
     // How many columns are below me.
@@ -317,14 +333,28 @@ export class ComplexColumnDefinition extends ColumnDefinition {
         return this.childColumns;
     }
 
-    width() : number {
+    get pixelWidth() : number {
+        let result : number = 0;
+        for (let i=0; i<this.childColumns.length; i++) {
+            let current = this.childColumns[i].pixelWidth;
+            result = result + current;
+        }
+        if (this._pixelWidth > result) {
+            return this._pixelWidth;
+        } else {
+            return result;
+        }
+    }
+
+    /* As a column with other columns below it, how many columns wide am I on the UI? */
+    columnsAcross() : number {
         if (!this.isExpanded) {
             return 1;
         }
 
         let totalWidth = 0;
         for (let i=0; i<this.childColumns.length; i++) {
-            let current = this.childColumns[i].width();
+            let current = this.childColumns[i].columnsAcross();
             totalWidth = totalWidth + current;
             
         }

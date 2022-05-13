@@ -20,6 +20,7 @@ export interface DataTableProps {
 export interface DataTableState {
     firstVisibleRow: number; // Index of the row at the top of the visible table.  
     dropColumnMarkerPosition: number | null;
+    isResizingColumn: boolean; // Are we currently resizing a column?
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
@@ -62,8 +63,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     render = () => {
         this.numRows = this.props.query.count();
         this.columnWidths = (
-            range(this.props.query.numColumns())
-                .map((a) => 100));
+            this.props.query.columns
+                .map((each) => each.pixelWidth));
 
         this.firstRenderedRow = this.state.firstVisibleRow;
         this.lastRenderedRow = this.state.firstVisibleRow + this.numVisibleRows + 2;
@@ -341,6 +342,13 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     onHeadingDragOver(ev: React.DragEvent<HTMLDivElement>) {
         ev.preventDefault();
     }
+
+    onColumnResize(ev: React.DragEvent<HTMLDivElement>) {
+        //ev.preventDefault();
+        const id = (ev.target as HTMLDivElement).id;
+        console.log(`Drag: ${id} to ${ev.clientX}`); 
+    }
+
 }
 
 interface PositionedHeading {
