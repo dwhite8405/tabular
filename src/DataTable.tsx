@@ -37,7 +37,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     private firstRenderedRow: number = 0; // Off-screen, the first row we render.
     private lastRenderedRow: number = 0; // Off-screen, the last row we render.
     private numRows: number = 1;
-
+   
     constructor(props: Readonly<DataTableProps>) {
         super(props);
         this.columnWidths = [];
@@ -203,7 +203,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         return <div
             id={`heading_${column.name}`}
             style={layout}
-            key={key}>
+            key={key}
+            onContextMenu={this.onContextMenu}>
             {/* We assume the first child here has data-columnName */}
             <div
                 className="datatable-head-cell"
@@ -390,6 +391,12 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     stopResizeColumn: MouseEventHandler<HTMLDivElement> = (ev) => {
         this.setState({ resizingColumn: undefined });
     }
+
+    onContextMenu: MouseEventHandler<HTMLDivElement> = (ev) => {
+        ev.preventDefault(); // Prevent the browser context menu.
+        alert("Context menu.");
+    }
+
 }
 
 interface PositionedHeading {
