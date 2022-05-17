@@ -1,5 +1,5 @@
 import React from 'react';
-import * as query from './query';
+import Query, * as query from 'query/Query';
 
 /* A room contains the state of a table - the data, a list of edits, the selected row, the selected column, etc.
 
@@ -11,11 +11,11 @@ edited elements in that table.
 
 export interface RoomProps {
     children: React.ReactNode;
-    query: query.Query;
+    query: Query;
 }
 
 export interface RoomState {
-    query: query.Query;
+    query: Query;
 }
 
 export class Room extends React.Component<RoomProps, RoomState> {
@@ -36,7 +36,7 @@ export class Room extends React.Component<RoomProps, RoomState> {
         }
     }
 
-    refetch(q: query.Query) {
+    refetch(q: Query) {
         q.refetchColumns();
         this.setState({ query: q }); // Show the columns.
         q.refetchContents();

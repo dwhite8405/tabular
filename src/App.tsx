@@ -1,22 +1,23 @@
 import React from 'react';
-import { DataTable, range } from './DataTable';
-import { Room } from './Room';
-import * as query from './query';
-import { ODataQuery } from './oDataQuery';
-import { CollectionQuery } from './collectionQuery';
+import { DataTable } from 'components/DataTable';
+import { Room } from 'components/Room';
+import Query, * as query from 'query/Query';
+import { ODataQuery } from 'query/ODataQuery';
+import { CollectionQuery } from 'query/CollectionQuery';
 
-import './App.css';
-import './DataTable.css';
+import 'App.css';
+import 'components/DataTable.css';
+import { range } from './functional';
 
 interface AppProps {}
 interface AppState {
-  currentQuery: query.Query;
+  currentQuery: Query;
 }
 
 class App extends React.Component<AppProps, AppState> {
   private readonly url: string = 'https://services.odata.org/V4/TripPinServiceRW/';
   readonly tableName = 'People';
-  private queries : query.Query[];
+  private queries : Query[];
   
   constructor(props: Readonly<AppProps>) {
     super(props);
@@ -41,16 +42,16 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private makeQueries = () => {
-    let q1 : query.Query = ODataQuery.create(this.url, this.tableName);
-    let q2 : query.Query = new CollectionQuery(
+    let q1 : Query = ODataQuery.create(this.url, this.tableName);
+    let q2 : Query = new CollectionQuery(
       [{name:'foo'}, {name: 'bar'}, {name: 'baz'}], 
       range(200000).map(each => [each, each+100, each+10000]));
       q2.name = "200000 items.";
-    let q3: query.Query = this.makeBigLocalInterestingQuery();
+    let q3: Query = this.makeBigLocalInterestingQuery();
     return [q3, q2, q1];
   }
 
-  private makeBigLocalInterestingQuery() : query.Query {
+  private makeBigLocalInterestingQuery() : Query {
     let size = 200;
 
     let contents = range(size).map(index => {

@@ -1,18 +1,17 @@
 import React, { MouseEventHandler } from 'react';
-import { CollectionQuery } from './collectionQuery';
-import * as query from './query';
-import './App.css';
+import { CollectionQuery } from 'query/CollectionQuery';
+import Query, * as query from 'query/Query';
 import './DataTable.css';
 //import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
-import { ColumnDefinition, ComplexColumnDefinition } from './query';
-import { RoomState } from './Room';
+import { ColumnDefinition } from 'query/ColumnDefinition';
+import { ComplexColumnDefinition } from 'query/ComplexColumnDefinition';
 
 // TODO If the size of the contents div changes:
 //  https://www.pluralsight.com/guides/re-render-react-component-on-window-resize
 
 
 export interface DataTableProps {
-    query: query.Query;
+    query: Query;
     refetch: any; // function. TODO: what is its type?
     children: never[];
 }
@@ -130,7 +129,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
        actually simpler to manage having all this in the same
        component... for now. */
     private renderHeadings(): JSX.Element {
-        let rootColumn: query.ComplexColumnDefinition = this.props.query.select;
+        let rootColumn: ComplexColumnDefinition = this.props.query.select;
         if (rootColumn.isEmpty()) {
             return <></>;
         }
@@ -155,7 +154,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     /* Render one column heading. */
     private renderHeadingToHtml = (
-        column: query.ColumnDefinition,
+        column: ColumnDefinition,
         layout: any,
         key: string) => {
 
@@ -280,8 +279,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     private onOrderBy(
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: query.Query,
-        column: query.ColumnDefinition,
+        t: Query,
+        column: ColumnDefinition,
         orderBy: query.OrderedBy
     )
         : void {
@@ -293,8 +292,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     private onExpandComplexColumn(
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: query.Query,
-        column: query.ColumnDefinition
+        t: Query,
+        column: ColumnDefinition
     )
         : void {
         console.log("Expand " + column.name);
@@ -304,8 +303,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     private onUnexpandComplexColumn(
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: query.Query,
-        column: query.ColumnDefinition
+        t: Query,
+        column: ColumnDefinition
     )
         : void {
         console.log("Unexpand " + column.name);
@@ -491,16 +490,6 @@ class ColumnsLaidOut {
     }
 
 
-}
-
-export function range(to: number) {
-    let result = Array.from(Array(to + 1).keys());
-    result.shift(); // Remove the zero.
-    return result;
-}
-
-function flatten(list: Array<any>) {
-    return [].concat.apply([], list);
 }
 
 function miniButton(

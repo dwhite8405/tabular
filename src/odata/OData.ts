@@ -1,5 +1,8 @@
-import { ODataQuery } from '../oDataQuery';
-import * as query from '../query'
+import { ColumnDefinition } from 'query/ColumnDefinition';
+import { ComplexColumnDefinition } from 'query/ComplexColumnDefinition';
+import { ODataQuery } from 'query/ODataQuery';
+import { PrimitiveColumnDefinition } from 'query/PrimitiveColumnDefinition';
+import * as query from 'query/Query'
 
 /** Return the URL where the document metadata can be retrieved. */
 export function metadataURL(baseURL: string) {
@@ -64,7 +67,7 @@ function setTableColumns3(
     namespace: string,
     metadata: Document)
 {
-    let columns: Array<query.ColumnDefinition> = [];
+    let columns: Array<ColumnDefinition> = [];
     //let properties = entity.getElementsByTagName("Property");
     // TODO: <Key> 
 
@@ -86,7 +89,7 @@ function setTableColumns3(
     table.columns = columns;
 }
 
-function createColumnFrom(node: Element, namespace: string, metadata: Document) : query.ColumnDefinition 
+function createColumnFrom(node: Element, namespace: string, metadata: Document) : ColumnDefinition 
 {
     let name: string;
     let typeString: string;
@@ -106,9 +109,9 @@ function createColumnFrom(node: Element, namespace: string, metadata: Document) 
 
     let typeOrNull = toPrimitiveType(typeString);
     if (null===typeOrNull) {
-        return new query.ComplexColumnDefinition(name, undefined);        
+        return new ComplexColumnDefinition(name, undefined);        
     } else {
-        return new query.PrimitiveColumnDefinition(name, typeOrNull, undefined);
+        return new PrimitiveColumnDefinition(name, typeOrNull, undefined);
     }
 }
 

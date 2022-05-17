@@ -1,6 +1,7 @@
-
-import { AbstractQuery, Row, Query, OrderedBy, ColumnDefinition } from './query';
-import * as OData from './odata/odata';
+import * as OData from 'odata/OData';
+import AbstractQuery from './AbstractQuery';
+import { ColumnDefinition } from './ColumnDefinition';
+import Query, { Row, OrderedBy } from './Query';
 
 
 export class ODataQuery extends AbstractQuery {

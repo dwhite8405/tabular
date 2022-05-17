@@ -1,5 +1,8 @@
-import { textChangeRangeIsUnchanged } from "typescript";
-import { AbstractQuery, PrimitiveColumnDefinition, PrimitiveType, Row, Query, ColumnDefinition, ComplexColumnDefinition, OrderedBy } from "./query";
+import AbstractQuery from "./AbstractQuery";
+import { ColumnDefinition } from "./ColumnDefinition";
+import { ComplexColumnDefinition } from "./ComplexColumnDefinition";
+import { PrimitiveColumnDefinition } from "./PrimitiveColumnDefinition";
+import Query, { PrimitiveType, Row, OrderedBy } from "./Query";
 
 interface CollectionQueryColumn {
     name: string;
