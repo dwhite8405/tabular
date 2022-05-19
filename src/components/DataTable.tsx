@@ -5,6 +5,7 @@ import './DataTable.css';
 //import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
 import { ColumnDefinition } from 'query/ColumnDefinition';
 import { ComplexColumnDefinition } from 'query/ComplexColumnDefinition';
+import { RowHeader } from './RowHeader';
 
 // TODO If the size of the contents div changes:
 //  https://www.pluralsight.com/guides/re-render-react-component-on-window-resize
@@ -48,9 +49,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         this.contentDivRef = React.createRef();
 
         this.onOrderBy = this.onOrderBy.bind(this);
-        this.onExpandComplexColumn = this.onExpandComplexColumn.bind(this);
-        this.onUnexpandComplexColumn = this.onUnexpandComplexColumn.bind(this);
-        this.renderHeadingToHtml = this.renderHeadingToHtml.bind(this);
         this.renderHeadings = this.renderHeadings.bind(this);
         this.renderTableContent = this.renderTableContent.bind(this);
     }
@@ -74,7 +72,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             <div className="datatable"
                 onMouseMove={this.maybeResizeColumn}
                 onMouseUp={this.stopResizeColumn}
-                onMouseLeave={this.stopResizeColumn}>
+                onMouseLeave={this.stopResizeColumn}
+                onDrop={this.onHeadingDrop}
+                onDragOver={this.onHeadingDragOver}>
                 {/* The "filter" box above the table. */}
                 <div className="datatable-filterdiv">
                     Filter
@@ -147,87 +147,18 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 };
 
                 let key = `G${each.row}|${each.columnStart}|${each.columnEnd}`
-                return this.renderHeadingToHtml(each.columnDefinition, layout, key);
+
+                return <RowHeader 
+                    column={each.columnDefinition}
+                    layout={layout}
+                    key={key}
+                    orderedBy = {query.orderedBy(this.props.query, each.columnDefinition)}
+                    onOrderBy = {this.onOrderBy}
+                    startResizeColumn = {this.startResizeColumn}
+                    columnsChanged={this.columnsChanged}
+                    />
             })
         }</>;
-    }
-
-    /* Render one column heading. */
-    private renderHeadingToHtml = (
-        column: ColumnDefinition,
-        layout: any,
-        key: string) => {
-
-        let t = this.props.query;
-
-        let collapse: JSX.Element;
-        if (column.hasChildren()) {
-            if (this.props.query.isExpanded(column)) {
-                collapse = miniButton("datatable-expandbutton", "⏷",
-                    (e) => this.onUnexpandComplexColumn(e, t, column));
-            } else {
-                collapse = miniButton("datatable-expandbutton", "⏵",
-                    (e) => this.onExpandComplexColumn(e, t, column));
-            }
-        } else {
-            collapse = <></>;
-        }
-
-        let xorderBy: JSX.Element;
-        switch (query.orderedBy(t, column)) {
-            case query.OrderedBy.ASC:
-                xorderBy = miniButton("datatable-sortbutton", "◢", (e) =>
-                    this.onOrderBy(e, t, column, query.OrderedBy.DESC));
-                break;
-            case query.OrderedBy.DESC:
-                xorderBy = miniButton("datatable-sortbutton", "◥", (e) =>
-                    this.onOrderBy(e, t, column, query.OrderedBy.NA));
-                break;
-            default:
-                xorderBy = miniButton("datatable-sortbutton", "◇", (e) =>
-                    this.onOrderBy(e, t, column, query.OrderedBy.ASC));
-                break;
-        }
-
-        // We need to do this to make the absolute positioning of the resize grip work.
-        layout['position']='relative';
-
-        /* TODO: It looks like this package bit-rotted.
-        Maybe implement it myself. 
-        <ContextMenuTrigger
-        id="contextmenu"
-        holdToDisplay={1000}>
-        */
-
-        return <div
-            id={`heading_${column.name}`}
-            style={layout}
-            key={key}
-            onContextMenu={this.onContextMenu}>
-            {/* We assume the first child here has data-columnName */}
-            <div
-                className="datatable-head-cell"
-                data-columnname={column.name}
-                draggable={true}
-                onDragStart={this.onHeadingDragStart}
-                onDrop={this.onHeadingDrop}
-                onDragOver={this.onHeadingDragOver}>
-                {collapse}
-                <span>{column.name}</span>
-                {xorderBy}
-               
-            </div>
-            {/* A mini div to drag-resize columns. */}
-            <div style={{
-                position: 'absolute',
-                width: 6,
-                height: '100%',
-                right: 0,
-                top: 0,
-                cursor: 'w-resize',     
-            }} onMouseDown={(ev)=>this.startResizeColumn(ev, column)}>
-            </div>
-        </div>;
     }
 
     /** Render only the visible cells. */
@@ -277,38 +208,22 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
+    /* (DELETEME) Callback from ColumnHeaders to order by that column. */
     private onOrderBy(
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: Query,
         column: ColumnDefinition,
         orderBy: query.OrderedBy
     )
         : void {
         console.log(`Ordering by ${orderBy}`);
-        let t2 = t.copy();
+        let t2 = this.props.query.copy();
         t2.orderBy(column, orderBy);
         this.props.refetch(t2);
     }
 
-    private onExpandComplexColumn(
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: Query,
-        column: ColumnDefinition
-    )
-        : void {
-        console.log("Expand " + column.name);
-
-        this.props.refetch(t.copy().expand(column));
-    }
-
-    private onUnexpandComplexColumn(
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: Query,
-        column: ColumnDefinition
-    )
-        : void {
-        console.log("Unexpand " + column.name);
-        this.props.refetch(t.copy().unexpand(column));
+    /* Callback from columns when there are changes in orderedBy, expand. 
+       OPTIMIZATION: This can be split up into multiple event handlers. */
+    private columnsChanged = () => {
+        
     }
 
     // For a discussion of some problems with this:
@@ -347,13 +262,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         alert(`Clicked on ${target?.firstElementChild?.getAttribute('data-columnname')}`)
     }*/
 
-    // DragEventHandler<HTMLDivElement> | undefined;
-    onHeadingDragStart(ev: React.DragEvent<HTMLDivElement>) {
-        //ev.preventDefault();
-        const id = (ev.target as HTMLDivElement).id;
-        console.log(`Drag: ${id}`)
-        ev.dataTransfer.setData("text", id);
-    }
 
     // DragEventHandler<HTMLDivElement> | undefined;
     onHeadingDrop(ev: React.DragEvent<HTMLDivElement>) {
@@ -389,11 +297,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     stopResizeColumn: MouseEventHandler<HTMLDivElement> = (ev) => {
         this.setState({ resizingColumn: undefined });
-    }
-
-    onContextMenu: MouseEventHandler<HTMLDivElement> = (ev) => {
-        ev.preventDefault(); // Prevent the browser context menu.
-        alert("Context menu.");
     }
 
 }
@@ -492,7 +395,7 @@ class ColumnsLaidOut {
 
 }
 
-function miniButton(
+export function miniButton(
     cssClass: string,
     contents: string,
     action: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void)) {
