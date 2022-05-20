@@ -70,9 +70,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
         return (
             <div className="datatable"
-                onMouseMove={this.maybeResizeColumn}
-                onMouseUp={this.stopResizeColumn}
-                onMouseLeave={this.stopResizeColumn}
+                onMouseMove={this.onMouseMove}
+                onMouseUp={this.onMouseUp}
+                onMouseLeave={this.onMouseUp}
                 onDrop={this.onHeadingDrop}
                 onDragOver={this.onHeadingDragOver}>
                 {/* The "filter" box above the table. */}
@@ -154,7 +154,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                     key={key}
                     orderedBy = {query.orderedBy(this.props.query, each.columnDefinition)}
                     onOrderBy = {this.onOrderBy}
-                    startResizeColumn = {this.startResizeColumn}
+                    startResizeColumn = {this.onMouseDown}
                     columnsChanged={this.columnsChanged}
                     />
             })
@@ -275,8 +275,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         ev.preventDefault();
     }
 
-    maybeResizeColumn: MouseEventHandler<HTMLDivElement> = (ev) => {
+    onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
         if (this.state.resizingColumn) {
+            console.log(`Resizing column: ${this.state.resizingColumn.columnNumber} which has width ${this.state.resizingColumn.pixelWidth}`);
+
             ev.preventDefault(); // Stop us from selecting text.
             let columnLeft = this.props.query.columns
                 .slice(0, this.state.resizingColumn.columnNumber    )
@@ -290,12 +292,12 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
-    startResizeColumn = (ev: React.MouseEvent<HTMLDivElement>, column : ColumnDefinition) => {
+    onMouseDown = (ev: React.MouseEvent<HTMLDivElement>, column : ColumnDefinition) => {
         ev.preventDefault(); // Stop us from selecting text instead.
         this.setState({ resizingColumn: column });
     }   
 
-    stopResizeColumn: MouseEventHandler<HTMLDivElement> = (ev) => {
+    onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
         this.setState({ resizingColumn: undefined });
     }
 
