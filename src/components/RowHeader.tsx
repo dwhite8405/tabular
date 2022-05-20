@@ -91,7 +91,7 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
                 draggable={true}
                 onDragStart={this.onHeadingDragStart}>
                 {collapse}
-                <span>bleargh {column.name}</span>
+                <span>{column.name}</span>
                 {xorderBy}
 
             </div>
@@ -102,7 +102,7 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
                 height: '100%',
                 right: 0,
                 top: 0,
-                cursor: 'w-resize',
+                cursor: 'ew-resize',
             }} onMouseDown={(ev) => this.props.startResizeColumn(ev, column)}>
             </div>
         </div>;
