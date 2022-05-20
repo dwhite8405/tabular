@@ -223,6 +223,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     /* Callback from columns when there are changes in orderedBy, expand. 
        OPTIMIZATION: This can be split up into multiple event handlers. */
     private columnsChanged = () => {
+        this.props.query.select.renumberColumns();
         this.forceUpdate();
     }
 
