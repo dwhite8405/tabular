@@ -59,6 +59,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
     render = () => {
+        console.log("DataTable render")
         this.numRows = this.props.query.count();
         this.columnWidths = (
             this.props.query.columns
@@ -223,7 +224,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     /* Callback from columns when there are changes in orderedBy, expand. 
        OPTIMIZATION: This can be split up into multiple event handlers. */
     private columnsChanged = () => {
-        
+        this.forceUpdate();
     }
 
     // For a discussion of some problems with this:

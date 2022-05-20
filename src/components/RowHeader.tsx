@@ -31,6 +31,8 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
             isExpanded: false,
             width: 100 // TODO: magic number
         };
+        this.onExpandComplexColumn = this.onExpandComplexColumn.bind(this);
+        this.onUnexpandComplexColumn = this.onUnexpandComplexColumn.bind(this);
     }
 
     /* Render one column heading. */
@@ -40,10 +42,10 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
         if (column.hasChildren()) {
             if (column.isExpanded) {
                 collapse = miniButton("datatable-expandbutton", "⏷",
-                    (e) => this.onUnexpandComplexColumn);
+                    (e) => this.onUnexpandComplexColumn(e) );
             } else {
                 collapse = miniButton("datatable-expandbutton", "⏵",
-                    (e) => this.onExpandComplexColumn);
+                    (e) => this.onExpandComplexColumn(e) );
             }
         } else {
             collapse = <></>;
@@ -109,20 +111,15 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
     }
 
     private onExpandComplexColumn(
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: Query,
-        column: ColumnDefinition
+        event: React.MouseEvent<HTMLButtonElement, MouseEvent>
     )
         : void {
-        console.log("Expand " + column.name);
         this.props.column.isExpanded = true;
         this.props.columnsChanged();
     }
 
     private onUnexpandComplexColumn(
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-        t: Query,
-        column: ColumnDefinition
+        event: React.MouseEvent<HTMLButtonElement, MouseEvent>
     )
         : void {
             this.props.column.isExpanded = false;
