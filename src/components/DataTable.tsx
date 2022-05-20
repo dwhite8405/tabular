@@ -1,4 +1,4 @@
-import React, { MouseEventHandler } from 'react';
+import React, { MouseEventHandler, ReactElement } from 'react';
 import { CollectionQuery } from 'query/CollectionQuery';
 import Query, * as query from 'query/Query';
 import './DataTable.css';
@@ -171,29 +171,28 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         } else {
             bgColor = 'pink';
         }
-        return (
-            rows.map((eachRow, row) =>
-                <>
-                    {eachRow.cells.map((eachCell, column) => {
-                        const layout: React.CSSProperties = {
-                            overflowX: "hidden",
-                            height: this.pixelsPerRow,
-                            gridRowStart: row + 1,
-                            gridRowEnd: row + 2,
-                            gridColumnStart: column + 1,
-                            gridColumnEnd: column + 2,
-                            whiteSpace: 'nowrap',
-                            backgroundColor: bgColor,
-                            textAlign: "right" // It would be nice to making decimal points match.
-                        }
-                        return <div key={`R${row}C${column}`}
-                            style={layout}>
-                            {this.asString(eachCell)}
-                        </div>
-                    }
-                    )}
-                </>
-            ));
+
+        let renderRows : Array<ReactElement> = [];
+        for (let y=0; y<rows.length; y++) {
+            for (let x=0; x<rows[y].cells.length; x++) {
+                const layout: React.CSSProperties = {
+                    overflowX: "hidden",
+                    height: this.pixelsPerRow,
+                    gridRowStart: y + 1,
+                    gridRowEnd: y + 2,
+                    gridColumnStart: x + 1,
+                    gridColumnEnd: x + 2,
+                    whiteSpace: 'nowrap',
+                    backgroundColor: bgColor,
+                    textAlign: "right" // It would be nice to making decimal points match.
+                }
+                renderRows.push(<div style={layout} key={`R${y}C${x}`}>
+                    {this.asString(rows[y].cells[x])}
+                </div>);
+            }
+        }
+
+        return renderRows;            
     }
 
     private asString(o: any): string {
@@ -209,7 +208,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
-    /* (DELETEME) Callback from ColumnHeaders to order by that column. */
+    /* Callback from ColumnHeaders to order by that column. */
     private onOrderBy(
         column: ColumnDefinition,
         orderBy: query.OrderedBy

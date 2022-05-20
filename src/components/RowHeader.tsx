@@ -13,7 +13,6 @@ import { miniButton } from './DataTable';
 export interface RowHeaderProps {
     column : ColumnDefinition;
     layout : CSSProperties;
-    key : string;
     orderedBy: query.OrderedBy;
     onOrderBy: (c:ColumnDefinition, o:query.OrderedBy) => void;
     startResizeColumn: (ev: React.MouseEvent<HTMLDivElement>, column : ColumnDefinition) => void;
@@ -84,7 +83,6 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
         return <div
             id={`heading_${column.name}`}
             style={this.props.layout}
-            key={this.props.key}
             onContextMenu={this.onContextMenu}>
             {/* We assume the first child here has data-columnName */}
             <div
