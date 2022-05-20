@@ -115,8 +115,7 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
     )
         : void {
         console.log("Expand " + column.name);
-
-        this.setState({isExpanded:false});
+        this.props.column.isExpanded = true;
         this.props.columnsChanged();
     }
 
@@ -126,8 +125,9 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
         column: ColumnDefinition
     )
         : void {
-            this.setState({isExpanded:false});
-        }
+            this.props.column.isExpanded = false;
+            this.props.columnsChanged();
+    }
 
     // DragEventHandler<HTMLDivElement> | undefined;
     onHeadingDragStart(ev: React.DragEvent<HTMLDivElement>) {
