@@ -1,5 +1,4 @@
 import { ColumnDefinition } from "./ColumnDefinition";
-import { expandedColumnIterator } from "./ColumnIterator";
 
 export class ComplexColumnDefinition extends ColumnDefinition {
     childColumns: ColumnDefinition[];
