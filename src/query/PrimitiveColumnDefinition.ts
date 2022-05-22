@@ -21,4 +21,5 @@ export class PrimitiveColumnDefinition extends ColumnDefinition {
         this.columnNumber = from[0];
         from[0] = from[0]+1;
     }
+
 }

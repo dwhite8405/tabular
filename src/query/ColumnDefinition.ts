@@ -3,7 +3,7 @@ export abstract class ColumnDefinition {
     isExpanded: boolean; // Only used by ComplexColumnDefinitions.
     columnNumber: number = 0;
     _name: string;
-    _pixelWidth: number = 100;
+    _pixelWidth: number; // Can be used by complex columns if they are unexpanded.
 
     // _type and childColumns are mutually exclusive.
     _parent?: ColumnDefinition;
@@ -13,6 +13,7 @@ export abstract class ColumnDefinition {
         this._name = name;
         this._parent = undefined;
         this.isExpanded = false;
+        this._pixelWidth = 100;
         //this._isCollection = false;
     }
 
@@ -35,16 +36,6 @@ export abstract class ColumnDefinition {
         return 1;
     }
 
-    get pixelWidth () : number {
-        return this._pixelWidth;
-    }
-
-    set pixelWidth(width: number) {
-        if (width > 3) {
-            this._pixelWidth = width;
-        }
-    }
-
     // How many columns are below me.
     depth(): number {
         return 1;
@@ -55,4 +46,14 @@ export abstract class ColumnDefinition {
     }
 
     abstract renumberColumnsImpl(from: number[]) : void;
+
+    get pixelWidth () : number {
+        return this._pixelWidth;
+    }
+
+    set pixelWidth(width: number) {
+        if (width > 3) {
+            this._pixelWidth = width;
+        }
+    }
 }

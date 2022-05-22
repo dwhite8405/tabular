@@ -72,6 +72,10 @@ export default abstract class AbstractQuery implements Query {
         return this._select.childColumns;
     }
 
+    get expandedColumns() : ColumnDefinition[] {
+        return this._select.expandedColumns;
+    }
+
     numColumns : () => number = () => {
         return this._select.numColumns();
     }

@@ -27,6 +27,7 @@ export default interface Query {
     count() : number;
 
     get columns() : ColumnDefinition[];
+    get expandedColumns() : ColumnDefinition[];
     numColumns(): number;
 
     // Get rows from the table.

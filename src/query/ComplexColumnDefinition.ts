@@ -1,4 +1,5 @@
 import { ColumnDefinition } from "./ColumnDefinition";
+import { expandedColumnIterator } from "./ColumnIterator";
 
 export class ComplexColumnDefinition extends ColumnDefinition {
     childColumns: ColumnDefinition[];
@@ -14,26 +15,6 @@ export class ComplexColumnDefinition extends ColumnDefinition {
 
     childs(): Array<ColumnDefinition> {
         return this.childColumns;
-    }
-
-    get pixelWidth(): number {
-        /*
-        let result : number = 0;
-        for (let i=0; i<this.childColumns.length; i++) {
-            let current = this.childColumns[i].pixelWidth;
-            result = result + current;
-        }
-        if (this._pixelWidth < result) {
-            return this._pixelWidth;
-        } else {
-            return result;
-        }*/
-        return this._pixelWidth;
-    }
-
-    set pixelWidth(number) {
-        this._pixelWidth = number;
-        //this._pixelWidth = this.pixelWidth; // Ensure that it is not narrower than my child columns.
     }
 
     /* As a column with other columns below it, how many columns wide am I on the UI? */
@@ -104,4 +85,22 @@ export class ComplexColumnDefinition extends ColumnDefinition {
             from[0] = from[0]+1;
         }
     }
+
+    get expandedColumns() : ColumnDefinition[] {
+        let result: ColumnDefinition[] = [];
+        this.expandedColumnsImpl(this, result);
+        return result;
+    }
+
+    private expandedColumnsImpl(c:ColumnDefinition, result:ColumnDefinition[]) {
+        if (c.numColumns() > 0 && c.isExpanded ) {
+            for (let each of c.childs()) {
+                this.expandedColumnsImpl(each, result);
+            }
+        }
+        else {
+            result.push(c);
+        }
+    }
+
 }

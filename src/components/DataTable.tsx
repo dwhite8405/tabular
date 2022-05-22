@@ -24,8 +24,6 @@ export interface DataTableState {
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
-    private columnWidths: Array<number>;
-
     // A mechanism to get to the DOM to get the content div height.
     private contentDivRef: React.RefObject<HTMLDivElement>;
 
@@ -40,7 +38,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
    
     constructor(props: Readonly<DataTableProps>) {
         super(props);
-        this.columnWidths = [];
         this.state = {
             firstVisibleRow: 0,
             dropColumnMarkerPosition: null,
@@ -59,15 +56,12 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
     render = () => {
-        console.log("DataTable render")
+
         this.numRows = this.props.query.count();
-        this.columnWidths = (
-            this.props.query.columns
-                .map((each) => each.pixelWidth));
+        let gridStyle = this.gridStyle();
 
         this.firstRenderedRow = this.state.firstVisibleRow;
         this.lastRenderedRow = this.state.firstVisibleRow + this.numVisibleRows + 2;
-
 
         return (
             <div className="datatable"
@@ -78,20 +72,20 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 onDragOver={this.onHeadingDragOver}>
                 {/* The "filter" box above the table. */}
                 <div className="datatable-filterdiv">
-                    Filter
+                    Filter goes here.
                 </div>
 
                 {/* The column headings. */}
                 <div
                     className="datatable-headerdiv"
-                    style={this.gridStyle()}>
+                    style={gridStyle}>
                     {this.renderHeadings()}
                 </div>
 
                 {/* The scroll bar. */}
                 <div
                     className="datatable-contentsdiv"
-                    style={this.gridStyle()}
+                    style={gridStyle}
                     onScroll={(e) => this.handleScroll(e)}
                     ref={this.contentDivRef}>
 
@@ -100,7 +94,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
                         {/* Only the currently visible rows. */}
                         <div style={{
-                            ...this.gridStyle(),
+                            ...gridStyle,
                             transform: `translateY(${this.state.firstVisibleRow * this.pixelsPerRow}px)`
                         }}>
                             {this.renderTableContent()}
@@ -113,8 +107,12 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
     private gridStyle = () => {
+        let columnWidths = (
+            this.props.query.expandedColumns
+                .map((each) => each.pixelWidth));
+
         let c =
-            this.columnWidths
+            columnWidths
                 .map((each) => `${each}px `)
                 .reduce((a, v) => a.concat(v), "");
 
@@ -186,6 +184,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                     backgroundColor: bgColor,
                     textAlign: "right" // It would be nice to making decimal points match.
                 }
+
                 renderRows.push(<div style={layout} key={`R${y}C${x}`}>
                     {this.asString(rows[y].cells[x])}
                 </div>);
@@ -278,10 +277,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
         if (this.state.resizingColumn) {
-            console.log(`Resizing column: ${this.state.resizingColumn.columnNumber} which has width ${this.state.resizingColumn.pixelWidth}`);
+            console.log(`Resizing column: ${this.state.resizingColumn.name} which has width ${this.state.resizingColumn.pixelWidth}`);
 
             ev.preventDefault(); // Stop us from selecting text.
-            let columnLeft = this.props.query.columns
+            let columnLeft = this.props.query.expandedColumns
                 .slice(0, this.state.resizingColumn.columnNumber    )
                 .map(each => each.pixelWidth)
                 .reduce((x,y) => x+y, 0);
