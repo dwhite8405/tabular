@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, ReactElement } from 'react';
+import React, { CSSProperties, MouseEventHandler, ReactElement } from 'react';
 import { CollectionQuery } from 'query/CollectionQuery';
 import Query, * as query from 'query/Query';
 import './DataTable.css';
@@ -35,7 +35,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     private firstRenderedRow: number = 0; // Off-screen, the first row we render.
     private lastRenderedRow: number = 0; // Off-screen, the last row we render.
     private numRows: number = 1;
-   
+
     constructor(props: Readonly<DataTableProps>) {
         super(props);
         this.state = {
@@ -79,6 +79,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                 <div
                     className="datatable-headerdiv"
                     style={gridStyle}>
+                    {this.renderDropColumnMarker()}
                     {this.renderHeadings()}
                 </div>
 
@@ -101,6 +102,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                         </div>
                     </div>
                 </div>
+
                 {/*this.contextMenus()*/}
             </div>
         );
@@ -147,15 +149,15 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
                 let key = `G${each.row}|${each.columnStart}|${each.columnEnd}`
 
-                return <RowHeader 
+                return <RowHeader
                     column={each.columnDefinition}
                     layout={layout}
                     key={key}
-                    orderedBy = {query.orderedBy(this.props.query, each.columnDefinition)}
-                    onOrderBy = {this.onOrderBy}
-                    startResizeColumn = {this.onMouseDown}
+                    orderedBy={query.orderedBy(this.props.query, each.columnDefinition)}
+                    onOrderBy={this.onOrderBy}
+                    startResizeColumn={this.onMouseDown}
                     columnsChanged={this.columnsChanged}
-                    />
+                />
             })
         }</>;
     }
@@ -163,16 +165,16 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     /** Render only the visible cells. */
     private renderTableContent(): JSX.Element[] {
         let rows = this.props.query.get(this.firstRenderedRow, this.lastRenderedRow);
-        let bgColor : string;
+        let bgColor: string;
         if (this.state.resizingColumn) {
             bgColor = 'red';
         } else {
             bgColor = 'pink';
         }
 
-        let renderRows : Array<ReactElement> = [];
-        for (let y=0; y<rows.length; y++) {
-            for (let x=0; x<rows[y].cells.length; x++) {
+        let renderRows: Array<ReactElement> = [];
+        for (let y = 0; y < rows.length; y++) {
+            for (let x = 0; x < rows[y].cells.length; x++) {
                 const layout: React.CSSProperties = {
                     overflowX: "hidden",
                     height: this.pixelsPerRow,
@@ -191,7 +193,22 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             }
         }
 
-        return renderRows;            
+        return renderRows;
+    }
+
+    private renderDropColumnMarker(): JSX.Element {
+        if (null === this.state.dropColumnMarkerPosition) {
+            return <></>
+        } else {
+            let style: CSSProperties = {
+                backgroundColor: 'yellow',
+                position: 'absolute',
+                marginLeft: `${this.state.dropColumnMarkerPosition}px`,
+                width: 10,
+                height: 200
+            }
+            return <div style={style}>XXX</div>
+        }
     }
 
     private asString(o: any): string {
@@ -264,15 +281,28 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
 
     // DragEventHandler<HTMLDivElement> | undefined;
-    onHeadingDrop(ev: React.DragEvent<HTMLDivElement>) {
+    onHeadingDrop = (ev: React.DragEvent<HTMLDivElement>) => {
         ev.preventDefault();
         let data = ev.dataTransfer.getData("text");
         console.log(`Drop: ${(ev.currentTarget as HTMLDivElement).id} got data ${data}`);
+        this.setState({dropColumnMarkerPosition:null});
     }
 
     // DragEventHandler<HTMLDivElement> | undefined;
-    onHeadingDragOver(ev: React.DragEvent<HTMLDivElement>) {
+    onHeadingDragOver = (ev: React.DragEvent<HTMLDivElement>) => {
         ev.preventDefault();
+        this.setState({ dropColumnMarkerPosition: this.snapToColumnEdge(ev.clientX) });
+    }
+
+    private snapToColumnEdge(x: number) {
+        let widthSoFar = 0;
+        for (let c of this.props.query.expandedColumns) {
+            if (widthSoFar > x- c.pixelWidth/2) {
+                return widthSoFar;
+            }
+            widthSoFar = widthSoFar + c.pixelWidth;
+        }
+        return widthSoFar;
     }
 
     onMouseMove: MouseEventHandler<HTMLDivElement> = (ev) => {
@@ -281,9 +311,9 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
             ev.preventDefault(); // Stop us from selecting text.
             let columnLeft = this.props.query.expandedColumns
-                .slice(0, this.state.resizingColumn.columnNumber    )
+                .slice(0, this.state.resizingColumn.columnNumber)
                 .map(each => each.pixelWidth)
-                .reduce((x,y) => x+y, 0);
+                .reduce((x, y) => x + y, 0);
 
             this.state.resizingColumn.pixelWidth = ev.clientX - columnLeft;
             // TODO: use React properly here. Make header components.
@@ -292,10 +322,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
-    onMouseDown = (ev: React.MouseEvent<HTMLDivElement>, column : ColumnDefinition) => {
+    onMouseDown = (ev: React.MouseEvent<HTMLDivElement>, column: ColumnDefinition) => {
         ev.preventDefault(); // Stop us from selecting text instead.
         this.setState({ resizingColumn: column });
-    }   
+    }
 
     onMouseUp: MouseEventHandler<HTMLDivElement> = (ev) => {
         this.setState({ resizingColumn: undefined });

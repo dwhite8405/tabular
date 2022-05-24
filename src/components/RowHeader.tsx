@@ -125,7 +125,7 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
     }
 
     // DragEventHandler<HTMLDivElement> | undefined;
-    onHeadingDragStart(ev: React.DragEvent<HTMLDivElement>) {
+    onHeadingDragStart = (ev: React.DragEvent<HTMLDivElement>) => {
         //ev.preventDefault();
         const id = (ev.target as HTMLDivElement).id;
         console.log(`Drag: ${id}`)
