@@ -1,7 +1,7 @@
 /* The column heading, and it's type. */
 export abstract class ColumnDefinition {
     isExpanded: boolean; // Only used by ComplexColumnDefinitions.
-    columnNumber: number = 0;
+    columnNumber: number = 0; // Used when I'm in a query; I get changed if columns are moved.
     _name: string;
     _pixelWidth: number; // Can be used by complex columns if they are unexpanded.
 
@@ -54,6 +54,15 @@ export abstract class ColumnDefinition {
     set pixelWidth(width: number) {
         if (width > 3) {
             this._pixelWidth = width;
+        }
+    }
+
+    /* Return an ID used for drag and drop. */
+    get textualId() : string {
+        if (!this._parent) {
+            return "column_"+this._name;
+        } else {
+            return this._parent.textualId + "/" + this._name;
         }
     }
 }

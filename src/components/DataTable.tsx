@@ -231,9 +231,8 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     )
         : void {
         console.log(`Ordering by ${orderBy}`);
-        let t2 = this.props.query.copy();
-        t2.orderBy(column, orderBy);
-        this.props.refetch(t2);
+        this.props.query.orderBy(column, orderBy);
+        this.props.refetch(this.props.query);
     }
 
     /* Callback from columns when there are changes in orderedBy, expand. 
@@ -282,10 +281,50 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     // DragEventHandler<HTMLDivElement> | undefined;
     onHeadingDrop = (ev: React.DragEvent<HTMLDivElement>) => {
+        // Don't forget about the potential of drag/dropping columns between multiple tables.
         ev.preventDefault();
         let data = ev.dataTransfer.getData("text");
         console.log(`Drop: ${(ev.currentTarget as HTMLDivElement).id} got data ${data}`);
-        this.setState({dropColumnMarkerPosition:null});
+        if (data.startsWith("column_")) {
+            this.moveColumn(data, ev.clientX);
+        }
+        this.setState({ dropColumnMarkerPosition: null });
+    }
+
+    /* Move the column from the drag&drop text to the given pixel position. */
+    private moveColumn(dropData: string, pixelX: number) {
+        let from: ColumnDefinition | null = this.findColumnWithTextualId(dropData);
+        if (null == from) return;
+        let to: number = this.findExpandedColumnIndexAtPixelX(pixelX);
+
+        let q: Query = this.props.query;
+        q.moveColumn(from, to);
+        this.columnsChanged();
+    }
+
+    private findColumnWithTextualId = (dropData: string) => {
+        for (let c of this.props.query.expandedColumns) {
+            if (c.textualId == dropData) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    private findExpandedColumnIndexAtPixelX = (pixelPosition: number) => {
+        // -1 means insert before the first column.
+        let index = -1;
+        // Start at half a column's width to the left of the first column.
+        let widthSoFar = 0;
+        for (let c of this.props.query.expandedColumns) {
+            if (widthSoFar + c.pixelWidth/2 > pixelPosition) {
+                return index;
+            }
+            widthSoFar = widthSoFar + c.pixelWidth;
+            index++;
+        }
+
+        return index;
     }
 
     // DragEventHandler<HTMLDivElement> | undefined;
@@ -297,7 +336,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     private snapToColumnEdge(x: number) {
         let widthSoFar = 0;
         for (let c of this.props.query.expandedColumns) {
-            if (widthSoFar > x- c.pixelWidth/2) {
+            if (widthSoFar > x - c.pixelWidth / 2) {
                 return widthSoFar;
             }
             widthSoFar = widthSoFar + c.pixelWidth;

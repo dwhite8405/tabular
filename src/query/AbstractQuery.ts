@@ -98,5 +98,32 @@ export default abstract class AbstractQuery implements Query {
         return -1;
     }
 
+    moveColumn = (c: ColumnDefinition, expandedColumnsIndex: number) => {
+        let actualFrom = this._select.columns.findIndex((each) => each===c);
+
+        if (-1 === expandedColumnsIndex) {
+            if (this._select.columns[0]===c) return; 
+            this._select.columns.unshift(c); 
+            actualFrom++;
+        } else {
+            let actualTo = this.expandedIndexToActualIndex(expandedColumnsIndex);
+            if (-1===actualTo) return;
+            if (actualFrom===actualTo) return;
+            this.select.columns.splice(actualTo+1, 0, c);
+            if (actualFrom > actualTo + 1) {
+                actualFrom ++;
+            }
+        }
+
+        //  Remove the column.
+        this._select.columns.splice(actualFrom, 1); 
+        this.refetchContents(); // OPTIMIZATION: This can be lazy.
+    }
+
+    private expandedIndexToActualIndex(expandedIndex: number) {
+        let c : ColumnDefinition = this.expandedColumns[expandedIndex];
+        return this._select.columns.findIndex((each) => each===c);
+    }
+
 }
 

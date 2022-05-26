@@ -11,12 +11,12 @@ import { miniButton } from './DataTable';
 
 
 export interface RowHeaderProps {
-    column : ColumnDefinition;
-    layout : CSSProperties;
+    column: ColumnDefinition;
+    layout: CSSProperties;
     orderedBy: query.OrderedBy;
-    onOrderBy: (c:ColumnDefinition, o:query.OrderedBy) => void;
-    startResizeColumn: (ev: React.MouseEvent<HTMLDivElement>, column : ColumnDefinition) => void;
-    columnsChanged : () => void;
+    onOrderBy: (c: ColumnDefinition, o: query.OrderedBy) => void;
+    startResizeColumn: (ev: React.MouseEvent<HTMLDivElement>, column: ColumnDefinition) => void;
+    columnsChanged: () => void;
 }
 
 export interface RowHeaderState {
@@ -36,15 +36,15 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
 
     /* Render one column heading. */
     public render = () => {
-        let column : ColumnDefinition = this.props.column;
+        let column: ColumnDefinition = this.props.column;
         let collapse: JSX.Element;
         if (column.hasChildren()) {
             if (column.isExpanded) {
                 collapse = miniButton("datatable-expandbutton", "⏷",
-                    (e) => this.onUnexpandComplexColumn(e) );
+                    (e) => this.onUnexpandComplexColumn(e));
             } else {
                 collapse = miniButton("datatable-expandbutton", "⏵",
-                    (e) => this.onExpandComplexColumn(e) );
+                    (e) => this.onExpandComplexColumn(e));
             }
         } else {
             collapse = <></>;
@@ -81,11 +81,11 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
         */
 
         return <div
-            id={`heading_${column.name}`}
             style={this.props.layout}
             onContextMenu={this.onContextMenu}>
             {/* We assume the first child here has data-columnName */}
             <div
+                id={`heading_${column.name}`}
                 className="datatable-head-cell"
                 data-columnname={column.name}
                 draggable={true}
@@ -120,16 +120,16 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>
     )
         : void {
-            this.props.column.isExpanded = false;
-            this.props.columnsChanged();
+        this.props.column.isExpanded = false;
+        this.props.columnsChanged();
     }
 
     // DragEventHandler<HTMLDivElement> | undefined;
     onHeadingDragStart = (ev: React.DragEvent<HTMLDivElement>) => {
         //ev.preventDefault();
         const id = (ev.target as HTMLDivElement).id;
-        console.log(`Drag: ${id}`)
-        ev.dataTransfer.setData("text", id);
+        console.log(`Drag: ${this.props.column.textualId}`)
+        ev.dataTransfer.setData("text", this.props.column.textualId);
     }
 
     onContextMenu: MouseEventHandler<HTMLDivElement> = (ev) => {

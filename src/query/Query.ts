@@ -15,31 +15,35 @@ export default interface Query {
     filter?: FilterClause;
 
     // "expand" is which hierarchical (sub-)columns are visible.
-    expand(column: ColumnDefinition) : Query;
-    unexpand(column: ColumnDefinition) : Query;
+    expand(column: ColumnDefinition): Query;
+    unexpand(column: ColumnDefinition): Query;
     isExpanded(column: ColumnDefinition): boolean;
 
     // "orderBy" is the sort ordering of the table.
-    getOrderBy() : OrderedByEntry[];
-    orderBy(column: ColumnDefinition, by: OrderedBy) : Query;
-    
-    // "count" is the number of rows.
-    count() : number;
+    getOrderBy(): OrderedByEntry[];
+    orderBy(column: ColumnDefinition, by: OrderedBy): Query;
 
-    get columns() : ColumnDefinition[];
-    get expandedColumns() : ColumnDefinition[];
+    // "count" is the number of rows.
+    count(): number;
+
+    get columns(): ColumnDefinition[];
+    get expandedColumns(): ColumnDefinition[];
     numColumns(): number;
 
     // Get rows from the table.
-    get(from: number, to: number) : Row[];
+    get(from: number, to: number): Row[];
 
-    copy() : Query; // Needed to make React prop updates work.
+    copy(): Query; // Needed to make React prop updates work.
+
+    // Move the given column to the new index. Beware: the index is of expandedColumns,
+    // not query.columns.
+    moveColumn: (c: ColumnDefinition, expandedColumnsIndex: number) => void;
 
     // Ask the server for a fresh list of column headings.
-    refetchColumns() : void;
+    refetchColumns(): void;
 
     // Ask the server for a fresh list of rows.
-    refetchContents() : void;
+    refetchContents(): void;
 }
 
 export enum OrderedBy {
@@ -98,12 +102,12 @@ interface FilterClause {
 }
 
 class AndClause implements FilterClause {
-    left? : FilterClause;
+    left?: FilterClause;
     right?: FilterClause;
 }
 
 class OrClause implements FilterClause {
-    left? : FilterClause;
+    left?: FilterClause;
     right?: FilterClause;
 }
 
@@ -117,7 +121,7 @@ class OperatorClause implements FilterClause {
     right?: ValueClause;
 }
 
-interface ValueClause {}
+interface ValueClause { }
 
 class LiteralClause implements ValueClause {
     value: any;
