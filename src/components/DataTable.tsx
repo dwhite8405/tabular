@@ -291,7 +291,16 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         this.setState({ dropColumnMarkerPosition: null });
     }
 
-    /* Move the column from the drag&drop text to the given pixel position. */
+    /* Move the column from the drag&drop text to the given pixel position.
+    
+    We're handing dragging and dropping a column from a hierarchy to elsewhere in 
+    a hierarchy. I've decided on these rules:
+     * You can move any column in the hierarchy to the root, but if it wasn't 
+       originally in the root then you are prompted to rename it.
+     * You can reorder columns if they're in the same branch.
+     * You can remove columns entirely by dragging them away from the hierarchy.
+       (Failing that, maybe I'll add a rubbish bin drop target.)
+    */
     private moveColumn(dropData: string, pixelX: number) {
         let from: ColumnDefinition | null = this.findColumnWithTextualId(dropData);
         if (null == from) return;

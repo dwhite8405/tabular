@@ -124,6 +124,8 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
         this.props.columnsChanged();
     }
 
+    /* TODO: you can drag to any text area on the PC. How do
+       we avoid this? */
     // DragEventHandler<HTMLDivElement> | undefined;
     onHeadingDragStart = (ev: React.DragEvent<HTMLDivElement>) => {
         //ev.preventDefault();

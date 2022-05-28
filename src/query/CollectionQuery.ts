@@ -1,3 +1,4 @@
+import { queryAllByAltText } from "@testing-library/react";
 import AbstractQuery from "./AbstractQuery";
 import { ColumnDefinition } from "./ColumnDefinition";
 import { ComplexColumnDefinition } from "./ComplexColumnDefinition";
@@ -70,6 +71,9 @@ export class CollectionQuery extends AbstractQuery {
     }
 
     private addCells = (source:any[], column: ColumnDefinition, cells: any[]) => {
+        working here: The column ordering might be different from any[].
+        We need to have an original data schema, and a query.
+
         for(let i in column.childs()) {
             let c = column.childs()[i];
             if (c.isExpanded) {
