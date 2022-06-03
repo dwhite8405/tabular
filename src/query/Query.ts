@@ -1,5 +1,5 @@
-import { ColumnDefinition } from "./ColumnDefinition";
-import { ComplexColumnDefinition } from "./ComplexColumnDefinition";
+import { QueryColumn } from "./QueryColumn";
+import { ComplexQueryColumn } from "./ComplexQueryColumn";
 
 /* A "Query" is the model for a data table on the screen. It contains all 
 the state of a query, plus the contents of the current screen-full of data. 
@@ -9,25 +9,25 @@ export default interface Query {
 
     // "select" is the list of currently visible columns.
     // It is a tree structure. Expandable columns can be expanded or not expanded.
-    select: ComplexColumnDefinition;
+    select: ComplexQueryColumn;
 
     // "filter" is the filter at the top, or the "WHERE" part of SQL.
     filter?: FilterClause;
 
     // "expand" is which hierarchical (sub-)columns are visible.
-    expand(column: ColumnDefinition): Query;
-    unexpand(column: ColumnDefinition): Query;
-    isExpanded(column: ColumnDefinition): boolean;
+    expand(column: QueryColumn): Query;
+    unexpand(column: QueryColumn): Query;
+    isExpanded(column: QueryColumn): boolean;
 
     // "orderBy" is the sort ordering of the table.
     getOrderBy(): OrderedByEntry[];
-    orderBy(column: ColumnDefinition, by: OrderedBy): Query;
+    orderBy(column: QueryColumn, by: OrderedBy): Query;
 
     // "count" is the number of rows.
     count(): number;
 
-    get columns(): ColumnDefinition[];
-    get expandedColumns(): ColumnDefinition[];
+    get columns(): QueryColumn[];
+    get expandedColumns(): QueryColumn[];
     numColumns(): number;
 
     // Get rows from the table.
@@ -37,7 +37,7 @@ export default interface Query {
 
     // Move the given column to the new index. Beware: the index is of expandedColumns,
     // not query.columns.
-    moveColumn: (c: ColumnDefinition, expandedColumnsIndex: number) => void;
+    moveColumn: (c: QueryColumn, expandedColumnsIndex: number) => void;
 
     // Ask the server for a fresh list of column headings.
     refetchColumns(): void;
@@ -128,7 +128,7 @@ class LiteralClause implements ValueClause {
 }
 
 class ColumnClause implements ValueClause {
-    column?: ColumnDefinition;
+    column?: QueryColumn;
 }
 
 enum Operator {
@@ -142,7 +142,7 @@ enum Operator {
 }
 
 export interface OrderedByEntry {
-    column: ColumnDefinition;
+    column: QueryColumn;
     orderedBy: OrderedBy;
 }
 
@@ -151,7 +151,7 @@ export interface Row {
 }
 
 /** Return how that column in the query is ordered. */
-export function orderedBy(table: Query, column: ColumnDefinition): OrderedBy {
+export function orderedBy(table: Query, column: QueryColumn): OrderedBy {
     let possibleResult = table.getOrderBy().find(
         each => each.column.name === column.name);
     if (possibleResult) {

@@ -3,8 +3,8 @@ import { CollectionQuery } from 'query/CollectionQuery';
 import Query, * as query from 'query/Query';
 import './DataTable.css';
 //import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
-import { ColumnDefinition } from 'query/ColumnDefinition';
-import { ComplexColumnDefinition } from 'query/ComplexColumnDefinition';
+import { QueryColumn } from 'query/QueryColumn';
+import { ComplexQueryColumn } from 'query/ComplexQueryColumn';
 import { RowHeader } from './RowHeader';
 
 // TODO If the size of the contents div changes:
@@ -20,7 +20,7 @@ export interface DataTableProps {
 export interface DataTableState {
     firstVisibleRow: number; // Index of the row at the top of the visible table.  
     dropColumnMarkerPosition: number | null;
-    resizingColumn?: ColumnDefinition; // null, or which column we're resizing.
+    resizingColumn?: QueryColumn; // null, or which column we're resizing.
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
@@ -130,7 +130,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
        actually simpler to manage having all this in the same
        component... for now. */
     private renderHeadings(): JSX.Element {
-        let rootColumn: ComplexColumnDefinition = this.props.query.select;
+        let rootColumn: ComplexQueryColumn = this.props.query.select;
         if (rootColumn.isEmpty()) {
             return <></>;
         }
@@ -226,7 +226,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     /* Callback from ColumnHeaders to order by that column. */
     private onOrderBy(
-        column: ColumnDefinition,
+        column: QueryColumn,
         orderBy: query.OrderedBy
     )
         : void {
@@ -302,7 +302,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
        (Failing that, maybe I'll add a rubbish bin drop target.)
     */
     private moveColumn(dropData: string, pixelX: number) {
-        let from: ColumnDefinition | null = this.findColumnWithTextualId(dropData);
+        let from: QueryColumn | null = this.findColumnWithTextualId(dropData);
         if (null == from) return;
         let to: number = this.findExpandedColumnIndexAtPixelX(pixelX);
 
@@ -370,7 +370,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
     }
 
-    onMouseDown = (ev: React.MouseEvent<HTMLDivElement>, column: ColumnDefinition) => {
+    onMouseDown = (ev: React.MouseEvent<HTMLDivElement>, column: QueryColumn) => {
         ev.preventDefault(); // Stop us from selecting text instead.
         this.setState({ resizingColumn: column });
     }
@@ -385,7 +385,7 @@ interface PositionedHeading {
     columnStart: number;
     columnEnd: number;
     row: number;
-    columnDefinition: ColumnDefinition;
+    columnDefinition: QueryColumn;
 }
 
 /* I'm a processed copy of the columns to make rendering easier. Instead of a tree, I'm 
@@ -394,9 +394,9 @@ organised by row of columns.
 To be honest, I'm really just a 2D array.
 */
 class ColumnsLaidOut {
-    private columnRows: Array<Array<ColumnDefinition | undefined>> = [];
+    private columnRows: Array<Array<QueryColumn | undefined>> = [];
 
-    static fromColumnDefinition(root: ComplexColumnDefinition): ColumnsLaidOut {
+    static fromColumnDefinition(root: ComplexQueryColumn): ColumnsLaidOut {
         let result: ColumnsLaidOut = new ColumnsLaidOut();
         let rightEdge: number[] = [0]; // I'm a container for a mutable value.
         this.fromColumnDefinitionImpl(root, 0, rightEdge, result);
@@ -404,13 +404,13 @@ class ColumnsLaidOut {
     }
 
     static fromColumnDefinitionImpl(
-        column: ComplexColumnDefinition,
+        column: ComplexQueryColumn,
         depth: number,
         rightEdge: number[],
         result: ColumnsLaidOut) {
         for (let each of column.childs()) {
             result.put(rightEdge[0], depth, each);
-            if (each instanceof ComplexColumnDefinition && each.isExpanded) {
+            if (each instanceof ComplexQueryColumn && each.isExpanded) {
                 this.fromColumnDefinitionImpl(each, depth + 1, rightEdge, result);
             } else {
                 rightEdge[0] = rightEdge[0] + 1;
@@ -419,7 +419,7 @@ class ColumnsLaidOut {
     }
 
     /* Put that object at x,y. I'm effectively a 2D array. Pad with undefineds when necessary. */
-    put = (x: number, y: number, me: ColumnDefinition) => {
+    put = (x: number, y: number, me: QueryColumn) => {
         while (this.columnRows.length <= y) {
             this.columnRows.push([]);
         }
@@ -439,11 +439,11 @@ class ColumnsLaidOut {
         let y: number = 0;
         for (let rowIter of this.columnRows) {
             // This code is funky because I'm having compiler issues.
-            let row: Array<ColumnDefinition | undefined> = rowIter;
+            let row: Array<QueryColumn | undefined> = rowIter;
             for (let x: number = 0; x < row.length; x++) {
-                let r: ColumnDefinition;
+                let r: QueryColumn;
                 if (undefined !== row[x]) {
-                    r = row[x] as ColumnDefinition;
+                    r = row[x] as QueryColumn;
                 } else {
                     continue;
                 }

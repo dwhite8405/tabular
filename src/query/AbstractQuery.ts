@@ -1,11 +1,11 @@
-import { ColumnDefinition } from "./ColumnDefinition";
-import { ComplexColumnDefinition } from "./ComplexColumnDefinition";
+import { QueryColumn } from "./QueryColumn";
+import { ComplexQueryColumn } from "./ComplexQueryColumn";
 import Query, { OrderedBy, OrderedByEntry, Row } from "./Query";
 
 export default abstract class AbstractQuery implements Query {
     _tableName: string;
     _orderBy: Array<OrderedByEntry>; // Which columns to sort by.
-    _select: ComplexColumnDefinition; // The visible columns, and whether they're expanded.
+    _select: ComplexQueryColumn; // The visible columns, and whether they're expanded.
     _count: boolean; // TODO whether I'm a 'select count(*)'
     filter?: any; // TODO
     _search?: string; // TODO - generic string search
@@ -17,7 +17,7 @@ export default abstract class AbstractQuery implements Query {
         this._count = false;
 
         // We use this super-column to contain a list of my actual visible columns.
-        this._select = new ComplexColumnDefinition("Supercolumn", undefined);
+        this._select = new ComplexQueryColumn("Supercolumn", undefined);
         this._select.isExpanded = true;
         this.copyFrom = this.copyFrom.bind(this);
         this.orderBy = this.orderBy.bind(this);
@@ -39,7 +39,7 @@ export default abstract class AbstractQuery implements Query {
         this._tableName = tableName;
     }
 
-    get select(): ComplexColumnDefinition  {
+    get select(): ComplexQueryColumn  {
         return this._select;
     }
 
@@ -47,32 +47,32 @@ export default abstract class AbstractQuery implements Query {
         return this._orderBy;
     }
 
-    expand = (column: ColumnDefinition) => {
+    expand = (column: QueryColumn) => {
         column.isExpanded = true;
         return this;
     }
 
-    unexpand = (column: ColumnDefinition) => {
+    unexpand = (column: QueryColumn) => {
         column.isExpanded = false;
         return this;
     }
 
-    isExpanded(column: ColumnDefinition): boolean {
+    isExpanded(column: QueryColumn): boolean {
         return column.isExpanded==true;
     }
 
-    orderBy(column: ColumnDefinition, by: OrderedBy) {
+    orderBy(column: QueryColumn, by: OrderedBy) {
         this._orderBy = [{ column: column, orderedBy: by }];
         return this;
     }
 
     abstract count() : number ;
 
-    get columns() : ColumnDefinition[] {
+    get columns() : QueryColumn[] {
         return this._select.childColumns;
     }
 
-    get expandedColumns() : ColumnDefinition[] {
+    get expandedColumns() : QueryColumn[] {
         return this._select.expandedColumns;
     }
 
@@ -86,7 +86,7 @@ export default abstract class AbstractQuery implements Query {
     refetchColumns() {}
     refetchContents() {}
 
-    columnIndex = (c : ColumnDefinition) => {
+    columnIndex = (c : QueryColumn) => {
         let i : number = 0;
         while (i<this._select.columns.length) {
             if (this._select.columns[i] == c) {
@@ -98,7 +98,7 @@ export default abstract class AbstractQuery implements Query {
         return -1;
     }
 
-    moveColumn = (c: ColumnDefinition, expandedColumnsIndex: number) => {
+    moveColumn = (c: QueryColumn, expandedColumnsIndex: number) => {
         let actualFrom = this._select.columns.findIndex((each) => each===c);
 
         if (-1 === expandedColumnsIndex) {
@@ -121,7 +121,7 @@ export default abstract class AbstractQuery implements Query {
     }
 
     private expandedIndexToActualIndex(expandedIndex: number) {
-        let c : ColumnDefinition = this.expandedColumns[expandedIndex];
+        let c : QueryColumn = this.expandedColumns[expandedIndex];
         return this._select.columns.findIndex((each) => each===c);
     }
 

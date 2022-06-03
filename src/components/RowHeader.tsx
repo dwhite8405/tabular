@@ -2,8 +2,8 @@ import React, { CSSProperties, MouseEventHandler } from 'react';
 import { CollectionQuery } from 'query/CollectionQuery';
 import Query, * as query from 'query/Query';
 import './DataTable.css';
-import { ColumnDefinition } from 'query/ColumnDefinition';
-import { ComplexColumnDefinition } from 'query/ComplexColumnDefinition';
+import { QueryColumn } from 'query/QueryColumn';
+import { ComplexQueryColumn } from 'query/ComplexQueryColumn';
 import { miniButton } from './DataTable';
 
 // TODO If the size of the contents div changes:
@@ -11,11 +11,11 @@ import { miniButton } from './DataTable';
 
 
 export interface RowHeaderProps {
-    column: ColumnDefinition;
+    column: QueryColumn;
     layout: CSSProperties;
     orderedBy: query.OrderedBy;
-    onOrderBy: (c: ColumnDefinition, o: query.OrderedBy) => void;
-    startResizeColumn: (ev: React.MouseEvent<HTMLDivElement>, column: ColumnDefinition) => void;
+    onOrderBy: (c: QueryColumn, o: query.OrderedBy) => void;
+    startResizeColumn: (ev: React.MouseEvent<HTMLDivElement>, column: QueryColumn) => void;
     columnsChanged: () => void;
 }
 
@@ -36,7 +36,7 @@ export class RowHeader extends React.Component<RowHeaderProps, RowHeaderState> {
 
     /* Render one column heading. */
     public render = () => {
-        let column: ColumnDefinition = this.props.column;
+        let column: QueryColumn = this.props.column;
         let collapse: JSX.Element;
         if (column.hasChildren()) {
             if (column.isExpanded) {
