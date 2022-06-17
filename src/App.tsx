@@ -2,12 +2,13 @@ import React from 'react';
 import { DataTable } from 'components/DataTable';
 import { Room } from 'components/Room';
 import Query, * as query from 'query/Query';
-import { ODataQuery } from 'query/ODataQuery';
-import { CollectionQuery } from 'query/CollectionQuery';
 
 import 'App.css';
 import 'components/DataTable.css';
 import { range } from './functional';
+import { ODataTable } from 'table/ODataTable';
+import { CollectionTable } from 'table/CollectionTable';
+import Table from 'table/Table';
 
 interface AppProps {}
 interface AppState {
@@ -42,16 +43,16 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private makeQueries = () => {
-    let q1 : Query = ODataQuery.create(this.url, this.tableName);
-    let q2 : Query = new CollectionQuery(
+    let q1 : Table = ODataTable.create(this.url, this.tableName);
+    let q2 : Table = new CollectionTable(
       [{name:'foo'}, {name: 'bar'}, {name: 'baz'}], 
       range(200000).map(each => [each, each+100, each+10000]));
       q2.name = "200000 items.";
-    let q3: Query = this.makeBigLocalInterestingQuery();
-    return [q3, q2, q1];
+    let q3: Table = this.makeBigLocalInterestingTable();
+    return [q3.query(), q2.query(), q1.query()];
   }
 
-  private makeBigLocalInterestingQuery() : Query {
+  private makeBigLocalInterestingTable() : Table {
     let size = 200;
 
     let contents = range(size).map(index => {
@@ -63,7 +64,7 @@ class App extends React.Component<AppProps, AppState> {
         text, "a date", "a select"];
     });
 
-    let q = new CollectionQuery(
+    let t = new CollectionTable(
       [
         {name:'Integer', type:query.PrimitiveType.Int32}, 
         {name: 'Float', type:query.PrimitiveType.Decimal}, 
@@ -79,8 +80,8 @@ class App extends React.Component<AppProps, AppState> {
         {name: 'Select'},
       ], 
       contents);
-    q.name = "Interesting stuff";
-    return q;
+    t.name = "Interesting stuff";
+    return t;
   }
 
   private changed(e:React.ChangeEvent<HTMLSelectElement>) {

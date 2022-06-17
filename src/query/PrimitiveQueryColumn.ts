@@ -1,16 +1,10 @@
 import { QueryColumn } from "./QueryColumn";
 import { PrimitiveType } from "./Query";
+import TableColumn from "table/TableColumn";
 
 export class PrimitiveQueryColumn extends QueryColumn {
-    _type: PrimitiveType;
-
-    constructor(name: string, type?: PrimitiveType, parent?: QueryColumn) {
-        super(name, parent);
-        if (undefined===type) {
-            this._type = PrimitiveType.String;
-        } else {
-            this._type = type;
-        }
+    constructor(basedOn : TableColumn, parent?: QueryColumn) {
+        super(basedOn, parent);
     }
 
     hasChildren() : boolean {
@@ -21,5 +15,4 @@ export class PrimitiveQueryColumn extends QueryColumn {
         this.columnNumber = from[0];
         from[0] = from[0]+1;
     }
-
 }

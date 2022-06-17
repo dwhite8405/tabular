@@ -1,5 +1,8 @@
+import TableColumn from "table/TableColumn";
+
 /* The column heading, and it's type. */
 export abstract class QueryColumn {
+    _basedOn: TableColumn;
     isExpanded: boolean; // Only used by ComplexColumnDefinitions.
     columnNumber: number = 0; // Used when I'm in a query; I get changed if columns are moved.
     _name: string;
@@ -9,8 +12,9 @@ export abstract class QueryColumn {
     _parent?: QueryColumn;
     // TODO _isCollection: boolean;
 
-    constructor(name: string, parent?: QueryColumn) {
-        this._name = name;
+    constructor(basedOn: TableColumn, parent?: QueryColumn) {
+        this._basedOn = basedOn;
+        this._name = basedOn.name;
         this._parent = undefined;
         this.isExpanded = false;
         this._pixelWidth = 100;

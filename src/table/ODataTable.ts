@@ -2,6 +2,7 @@ import * as OData from 'odata/OData';
 import { QueryColumn } from '../query/QueryColumn';
 import Query, { Row, OrderedBy } from '../query/Query';
 import Table from './Table';
+import TableColumn from './TableColumn';
 
 export class ODataTable extends Table {
     _baseURL: string;
@@ -9,7 +10,7 @@ export class ODataTable extends Table {
     _top?: number;
     _contents: Array<Row>;
 
-    static create(baseURL: string, name: string): Query {
+    static create(baseURL: string, name: string): Table {
         let result = new this().baseURL(baseURL);
         result.name = name;
         return result;
@@ -20,42 +21,28 @@ export class ODataTable extends Table {
         this._baseURL = "";
         this._contents = [];
         this.url = this.url.bind(this);
-        this.copy = this.copy.bind(this);
-        this.copyFrom = this.copyFrom.bind(this);
         this.refetchColumns = this.refetchColumns.bind(this);
         this.refetchContents = this.refetchContents.bind(this);
     }
 
-    copy = () => {
-        return new ODataQuery().copyFrom(this);
-    }
-
-    copyFrom(other: ODataQuery): Query {
-        super.copyFrom(other);
-        this._baseURL = other._baseURL;
-        this._contents = other._contents;
-        return this;
-    }
-
-
-    baseURL(url: string): Query {
+    private baseURL(url: string): Table {
         this._baseURL = url;
         return this;
     }
 
 
-    url(): string {
-        let base = this._baseURL + "/" + this._name;
-        if (this._orderBy.length > 0) {
-            return base + "?" + this.urlOrderedBy();
+    private url(q: Query): string {
+        let base = this._baseURL + "/" + this.name;
+        if (q._orderBy.length > 0) {
+            return base + "?" + this.urlOrderedBy(q);
         } else {
             return base;
         }
     }
 
-    urlOrderedBy(): string {
-        let result: string = "$orderby=" + this._orderBy[0].column.name + "%20";
-        switch (this._orderBy[0].orderedBy) {
+    private urlOrderedBy(q: Query): string {
+        let result: string = "$orderby=" + q._orderBy[0].column.name + "%20";
+        switch (q._orderBy[0].orderedBy) {
             case OrderedBy.ASC:
                 return result + "asc";
             case OrderedBy.DESC:
@@ -68,11 +55,11 @@ export class ODataTable extends Table {
     async refetchColumns() {
         let response = fetch(OData.metadataURL(this._baseURL));
         let data = (await response).text();
-        OData.setTableColumns(this, await data, this._tableName);
+        OData.setTableColumns(this, await data, this.name);
     }
     
-    async refetchContents() {
-        let response = fetch(this.url());
+    private async refetchContents(q: Query) {
+        let response = fetch(this.url(q));
         OData.setContents(this, await ((await response).json()));
     }
 
@@ -85,22 +72,18 @@ export class ODataTable extends Table {
         console.log(`Got ${this._contents.length} elements.`);
     }
 
-    get columns() : Array<QueryColumn> {
-        return this._select.columns;
-    }
-
-    set columns(columns : Array<QueryColumn>) {
-        this._select.columns = columns;
-    }
-
     count = () => {
         // TODO
         return this._contents.length;
     }
 
-    get: (from: number, to: number) => Row[] = 
-    (from: number, to: number) => {
-        console.log(`Getting from ${from} to ${to}`);
+    get: (q:Query, from: number, to: number) => Row[] = 
+    (q:Query, from: number, to: number) => {
+        this.refetchContents(q);
         return this._contents.slice(from, to);
+    }
+
+    getCount(q: Query): number {
+        throw new Error('Method not implemented.');
     }
 }

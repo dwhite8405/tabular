@@ -3,18 +3,19 @@ import { ComplexQueryColumn } from "../query/ComplexQueryColumn";
 import { PrimitiveQueryColumn } from "../query/PrimitiveQueryColumn";
 import Query, { PrimitiveType, Row, OrderedBy } from "../query/Query";
 import Table from "./Table"
+import TableColumn from "./TableColumn";
 
 interface CollectionTableColumn {
     name: string;
     type?: PrimitiveType;
 }
 
-interface ComplexCollectionQueryColumn {
+interface ComplexCollectionTableColumn {
     name: string;
     contents: CollectionColumnDefs[];
 }
 
-type CollectionColumnDefs = CollectionTableColumn | ComplexCollectionQueryColumn
+type CollectionColumnDefs = CollectionTableColumn | ComplexCollectionTableColumn
 
 /* Working here: 
 
@@ -34,19 +35,19 @@ export class CollectionTable extends Table {
 
     constructor(columns: Array<CollectionColumnDefs>, contents: Array<any>) {
         super();
-        this.addColumns(columns, this.select.columns);
+        this.addColumns(columns);
         this.contents = contents;
-        this.orderBy = this.orderBy.bind(this);
     }
 
-    private addColumns = (defs: CollectionColumnDefs[], columns: QueryColumn[], parent?: QueryColumn) => {
+    private addColumns = (defs: CollectionColumnDefs[], parent?: TableColumn) => {
         defs.forEach( each => {
             if ('contents' in each) {
-                let b = new ComplexQueryColumn(each.name, parent);
-                this.addColumns(each.contents, b.childColumns);
-                columns.push(b);
+                let t = new TableColumn(each.name, PrimitiveType.String);
+                this.addColumns(each.contents, t);
+                this.columns.push(t);
             } else {
-                columns.push(new PrimitiveQueryColumn(each.name, each.type))    
+                let t = new TableColumn(each.name, each.type ?? PrimitiveType.String);
+                this.columns.push(t);    
             }
         });
     }
@@ -55,14 +56,13 @@ export class CollectionTable extends Table {
         return this.contents.length;
     }
 
-    get: (from: number, to: number) => Row[] = 
-        (from: number, to: number) => {
-            this._select.renumberColumns();
+    get = (q:Query, from: number, to: number) => {
+            q._select.renumberColumns();
             let s : any[] = this.contents.slice(from, to);
             let result : Row[] = [];
             for (let each of s) {
                 let cells : any[] = [];
-                this.addCells(each, this._select, cells);
+                this.addCells(each, q._select, cells);
                 result.push({cells:cells});
             }
 
@@ -85,8 +85,8 @@ export class CollectionTable extends Table {
         }
     }
 
-    public orderBy(column: QueryColumn, by: OrderedBy) {
-        super.orderBy(column, by);
+    /* TODO Rewrite this. Maybe the query gets a copy of the data?
+    private orderBy(column: QueryColumn, by: OrderedBy) {
         let i : number = this.columnIndex(column);
         switch (by) {
             case OrderedBy.ASC:
@@ -100,7 +100,7 @@ export class CollectionTable extends Table {
         }
         
         return this;
-    }
+    } */
 
     private magnitude(b : boolean) {
         switch(b) {
@@ -111,14 +111,11 @@ export class CollectionTable extends Table {
         }        
     }
 
-    copy : () => Query = () => {
-        let result = new CollectionTable([], this.contents).copyFrom(this);
-        return result;
+    getCount(q: Query): number {
+        return this.contents.length;
     }
 
-    copyFrom = (me : CollectionTable) => {
-        let result = super.copyFrom(me);
-        result.select.columns = me.select.columns;
-        return result;
+    refetchColumns(): void {
+       
     }
 }

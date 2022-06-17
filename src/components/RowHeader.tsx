@@ -1,5 +1,4 @@
 import React, { CSSProperties, MouseEventHandler } from 'react';
-import { CollectionQuery } from 'query/CollectionQuery';
 import Query, * as query from 'query/Query';
 import './DataTable.css';
 import { QueryColumn } from 'query/QueryColumn';

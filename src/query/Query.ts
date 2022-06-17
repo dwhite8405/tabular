@@ -1,6 +1,8 @@
 import { QueryColumn } from "./QueryColumn";
 import { ComplexQueryColumn } from "./ComplexQueryColumn";
 import Table from "table/Table";
+import TableColumn from "table/TableColumn";
+import { PrimitiveQueryColumn } from "./PrimitiveQueryColumn";
 
 /* A "Query" is the model for a data table on the screen. It contains all 
 the state of a query, plus the contents of the current screen-full of data. 
@@ -21,7 +23,6 @@ export default class Query {
     // Which columns to sort by.
     _orderBy: Array<OrderedByEntry>;
 
-    _count: boolean; // TODO whether I'm a 'select count(*)'
     _filter?: any; // TODO
     _search?: string; // TODO - generic string search
 
@@ -30,12 +31,11 @@ export default class Query {
 
         this._name = t.name;
         this._orderBy = [];
-        this._count = false;
 
         // We use this super-column to contain a list of my actual visible columns.
-        this._select = new ComplexQueryColumn("Supercolumn", undefined);
+        this._select = new ComplexQueryColumn(new TableColumn("Parent column", PrimitiveType.String));
         this._select.isExpanded = true;
-        this._select.addAll(t.columns);
+        this.addColumns(t.columns);
 
         this.copyFrom = this.copyFrom.bind(this);
         this.orderBy = this.orderBy.bind(this);
@@ -43,10 +43,14 @@ export default class Query {
 
     copyFrom(other: Query): Query {
         this._name = other._name;
-        this._orderBy = other._orderBy;
-        this._count = other._count;
         this._select = other._select;
+        this._orderBy = other._orderBy;
         return this;
+    }
+
+    copy = () => {
+        let result = new Query(this._table);
+        return result.copyFrom(this);
     }
 
     get name() { return this._name; }
@@ -82,8 +86,8 @@ export default class Query {
         return this;
     }
 
-    count() {
-        this._count = true;
+    getCount = () => {
+        return this._table.getCount(this);
     }
 
     get columns() : QueryColumn[] {
@@ -116,6 +120,16 @@ export default class Query {
             }
         }
         return -1;
+    }
+
+    addColumns = (cs : TableColumn[]) => {
+        for(let each of cs) {
+            this._select.addColumn(each);
+        }
+    }
+
+    addColumn = (c : TableColumn) => {
+        this._select.addColumn(c);
     }
 
     moveColumn = (c: QueryColumn, expandedColumnsIndex: number) => {

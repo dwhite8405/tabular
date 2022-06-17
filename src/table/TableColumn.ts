@@ -20,4 +20,8 @@ export default class TableColumn {
         this._type = type;
         this.children = []
     }
+
+    get isComplex() {
+        return this.children.length == 0;
+    }
 }

@@ -1,11 +1,11 @@
 import React, { CSSProperties, MouseEventHandler, ReactElement } from 'react';
-import { CollectionQuery } from 'query/CollectionQuery';
 import Query, * as query from 'query/Query';
 import './DataTable.css';
 //import { ContextMenu, ContextMenuTrigger, MenuItem } from 'react-contextmenu';
 import { QueryColumn } from 'query/QueryColumn';
 import { ComplexQueryColumn } from 'query/ComplexQueryColumn';
 import { RowHeader } from './RowHeader';
+import { CollectionTable } from 'table/CollectionTable';
 
 // TODO If the size of the contents div changes:
 //  https://www.pluralsight.com/guides/re-render-react-component-on-window-resize
@@ -51,13 +51,13 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
     }
 
     public static defaultProps = {
-        table: (new CollectionQuery([], [])),
+        table: (new CollectionTable([], [])),
         refetch: (() => { })
     }
 
     render = () => {
 
-        this.numRows = this.props.query.count();
+        this.numRows = this.props.query.getCount();
         let gridStyle = this.gridStyle();
 
         this.firstRenderedRow = this.state.firstVisibleRow;

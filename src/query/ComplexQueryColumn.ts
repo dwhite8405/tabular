@@ -1,19 +1,17 @@
+import TableColumn from "table/TableColumn";
+import { PrimitiveQueryColumn } from "./PrimitiveQueryColumn";
 import { QueryColumn } from "./QueryColumn";
 
 export class ComplexQueryColumn extends QueryColumn {
-    childColumns: QueryColumn[];
+    public childColumns: QueryColumn[];
 
-    constructor(name: string, parent?: QueryColumn) {
-        super(name, parent);
+    constructor(basedOn : TableColumn, parent?: QueryColumn) {
+        super(basedOn, parent);
         this.childColumns = [];
     }
 
     hasChildren(): boolean {
         return true;
-    }
-
-    childs(): Array<QueryColumn> {
-        return this.childColumns;
     }
 
     /* As a column with other columns below it, how many columns wide am I on the UI? */
@@ -45,6 +43,19 @@ export class ComplexQueryColumn extends QueryColumn {
             }
         }
         return maxDepth + 1;
+    }
+
+    addColumn = (c : TableColumn) => {
+        let addMe : QueryColumn;
+        if (c.isComplex) {
+            addMe = new ComplexQueryColumn(c, this);
+            for (let each of c.children) {
+                this.addColumn(each);
+            }
+        } else {
+            addMe = new PrimitiveQueryColumn(c, this);
+        }
+        this.childColumns.push(addMe);
     }
 
     map<U>(callbackfn: (value: QueryColumn, index: number, array: QueryColumn[]) => U, thisArg?: any): U[] {

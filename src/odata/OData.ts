@@ -1,8 +1,10 @@
 import { QueryColumn } from 'query/QueryColumn';
 import { ComplexQueryColumn } from 'query/ComplexQueryColumn';
-import { ODataQuery } from 'query/ODataQuery';
 import { PrimitiveQueryColumn } from 'query/PrimitiveQueryColumn';
 import * as query from 'query/Query'
+import { ODataTable } from 'table/ODataTable';
+import Table from 'table/Table';
+import { PrimitiveType } from 'query/Query';
 
 /** Return the URL where the document metadata can be retrieved. */
 export function metadataURL(baseURL: string) {
@@ -21,7 +23,7 @@ export function tableURL(baseURL: string, tableName: string) {
 
 
 export function setTableColumns(
-    table: ODataQuery,
+    table: ODataTable,
     metadataXML: string, 
     tableName: string)
 {
@@ -48,7 +50,7 @@ export function setTableColumns(
     console.log("Error: could not set table.");
 }
 
-function setTableColumns2(table: ODataQuery, namespace: string, xml: Document, entityType: string | null) {
+function setTableColumns2(table: ODataTable, namespace: string, xml: Document, entityType: string | null) {
     let entities = xml.getElementsByTagName("edmx:Edmx")[0]
         .getElementsByTagName("edmx:DataServices")[0]
         .getElementsByTagName("Schema")[0]
@@ -62,12 +64,11 @@ function setTableColumns2(table: ODataQuery, namespace: string, xml: Document, e
 }
 
 function setTableColumns3(
-    table: ODataQuery,
+    table: ODataTable,
     entity: Element, 
     namespace: string,
     metadata: Document)
 {
-    let columns: Array<QueryColumn> = [];
     //let properties = entity.getElementsByTagName("Property");
     // TODO: <Key> 
 
@@ -76,7 +77,7 @@ function setTableColumns3(
         switch (node.nodeName) {
             case 'Property':
             case 'NavigationProperty':
-                columns.push(createColumnFrom(node, namespace, metadata));
+                createColumn(table, node, namespace, metadata);
                 break;
             case 'Key':
                 console.log('TODO: process keys.');
@@ -85,11 +86,9 @@ function setTableColumns3(
                 console.log('Unknown node name: ' + node.nodeName);
         }
     }
-
-    table.columns = columns;
 }
 
-function createColumnFrom(node: Element, namespace: string, metadata: Document) : QueryColumn 
+function createColumn(t: Table, node: Element, namespace: string, metadata: Document) : void
 {
     let name: string;
     let typeString: string;
@@ -109,14 +108,15 @@ function createColumnFrom(node: Element, namespace: string, metadata: Document) 
 
     let typeOrNull = toPrimitiveType(typeString);
     if (null===typeOrNull) {
-        return new ComplexQueryColumn(name, undefined);        
+        // TODO: Complex column
+        t.addColumn(name, PrimitiveType.String);
     } else {
-        return new PrimitiveQueryColumn(name, typeOrNull, undefined);
+        t.addColumn(name, PrimitiveType.String);
     }
 }
 
 /** contents could be JSON or Atom. */
-export function setContents(table: ODataQuery, obj: any) {
+export function setContents(table: ODataTable, obj: any) {
     let result: Array<query.Row> = [];
 
     if (undefined===obj.value) {
@@ -127,7 +127,7 @@ export function setContents(table: ODataQuery, obj: any) {
     for (let i = 0; i < obj.value.length; i++) {
         let current: Array<string> = []; // TODO: multiple types.
         let currentRow = obj.value[i];
-        let totalColumns = table.numColumns();
+        let totalColumns = table.columns.length;
         for (let j = 0; j < totalColumns; j++) {
             if(table.columns.length <= j) {
                 console.log(`Out of bounds: ${j}`);
