@@ -1,49 +1,149 @@
 import { QueryColumn } from "./QueryColumn";
 import { ComplexQueryColumn } from "./ComplexQueryColumn";
+import Table from "table/Table";
 
 /* A "Query" is the model for a data table on the screen. It contains all 
 the state of a query, plus the contents of the current screen-full of data. 
 */
-export default interface Query {
-    name: String;
+export default class Query {
+    // The Table I'm based on.
+    _table : Table;
+
+    // The name of this query. It starts out as the table name.
+    // It might eventually describe the whole query, e.g. "Person, registered on 2022-04-05, sorted by name"
+    // This will be visible in e.g. saved queries (TODO)
+    _name: string;
 
     // "select" is the list of currently visible columns.
     // It is a tree structure. Expandable columns can be expanded or not expanded.
-    select: ComplexQueryColumn;
+    _select: ComplexQueryColumn; 
 
-    // "filter" is the filter at the top, or the "WHERE" part of SQL.
-    filter?: FilterClause;
+    // Which columns to sort by.
+    _orderBy: Array<OrderedByEntry>;
 
-    // "expand" is which hierarchical (sub-)columns are visible.
-    expand(column: QueryColumn): Query;
-    unexpand(column: QueryColumn): Query;
-    isExpanded(column: QueryColumn): boolean;
+    _count: boolean; // TODO whether I'm a 'select count(*)'
+    _filter?: any; // TODO
+    _search?: string; // TODO - generic string search
 
-    // "orderBy" is the sort ordering of the table.
-    getOrderBy(): OrderedByEntry[];
-    orderBy(column: QueryColumn, by: OrderedBy): Query;
+    constructor(t : Table) {
+        this._table = t;
 
-    // "count" is the number of rows.
-    count(): number;
+        this._name = t.name;
+        this._orderBy = [];
+        this._count = false;
 
-    get columns(): QueryColumn[];
-    get expandedColumns(): QueryColumn[];
-    numColumns(): number;
+        // We use this super-column to contain a list of my actual visible columns.
+        this._select = new ComplexQueryColumn("Supercolumn", undefined);
+        this._select.isExpanded = true;
+        this._select.addAll(t.columns);
 
-    // Get rows from the table.
-    get(from: number, to: number): Row[];
+        this.copyFrom = this.copyFrom.bind(this);
+        this.orderBy = this.orderBy.bind(this);
+    }
 
-    copy(): Query; // Needed to make React prop updates work.
+    copyFrom(other: Query): Query {
+        this._name = other._name;
+        this._orderBy = other._orderBy;
+        this._count = other._count;
+        this._select = other._select;
+        return this;
+    }
 
-    // Move the given column to the new index. Beware: the index is of expandedColumns,
-    // not query.columns.
-    moveColumn: (c: QueryColumn, expandedColumnsIndex: number) => void;
+    get name() { return this._name; }
 
-    // Ask the server for a fresh list of column headings.
-    refetchColumns(): void;
+    set name(name: string) {
+        this._name = name;
+    }
 
-    // Ask the server for a fresh list of rows.
-    refetchContents(): void;
+    get select(): ComplexQueryColumn  {
+        return this._select;
+    }
+
+    getOrderBy = () => {
+        return this._orderBy;
+    }
+
+    expand = (column: QueryColumn) => {
+        column.isExpanded = true;
+        return this;
+    }
+
+    unexpand = (column: QueryColumn) => {
+        column.isExpanded = false;
+        return this;
+    }
+
+    isExpanded(column: QueryColumn): boolean {
+        return column.isExpanded==true;
+    }
+
+    orderBy(column: QueryColumn, by: OrderedBy) {
+        this._orderBy = [{ column: column, orderedBy: by }];
+        return this;
+    }
+
+    count() {
+        this._count = true;
+    }
+
+    get columns() : QueryColumn[] {
+        return this._select.childColumns;
+    }
+
+    get expandedColumns() : QueryColumn[] {
+        return this._select.expandedColumns;
+    }
+
+    numColumns : () => number = () => {
+        return this._select.numColumns();
+    }
+
+    /* Retrieve table contents for the given row range. */
+    get(from: number, to: number) : Row[] {
+        return this._table.get(this, from, to);
+    }
+
+    refetchColumns() {}
+    refetchContents() {}
+
+    columnIndex = (c : QueryColumn) => {
+        let i : number = 0;
+        while (i<this._select.columns.length) {
+            if (this._select.columns[i] == c) {
+                return i;
+            } else {
+                i++;
+            }
+        }
+        return -1;
+    }
+
+    moveColumn = (c: QueryColumn, expandedColumnsIndex: number) => {
+        let actualFrom = this._select.columns.findIndex((each) => each===c);
+
+        if (-1 === expandedColumnsIndex) {
+            if (this._select.columns[0]===c) return; 
+            this._select.columns.unshift(c); 
+            actualFrom++;
+        } else {
+            let actualTo = this.expandedIndexToActualIndex(expandedColumnsIndex);
+            if (-1===actualTo) return;
+            if (actualFrom===actualTo) return;
+            this.select.columns.splice(actualTo+1, 0, c);
+            if (actualFrom > actualTo + 1) {
+                actualFrom ++;
+            }
+        }
+
+        //  Remove the column.
+        this._select.columns.splice(actualFrom, 1); 
+        this.refetchContents(); // OPTIMIZATION: This can be lazy.
+    }
+
+    private expandedIndexToActualIndex(expandedIndex: number) {
+        let c : QueryColumn = this.expandedColumns[expandedIndex];
+        return this._select.columns.findIndex((each) => each===c);
+    }
 }
 
 export enum OrderedBy {

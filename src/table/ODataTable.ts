@@ -1,10 +1,9 @@
 import * as OData from 'odata/OData';
-import AbstractQuery from './AbstractQuery';
-import { QueryColumn } from './QueryColumn';
-import Query, { Row, OrderedBy } from './Query';
+import { QueryColumn } from '../query/QueryColumn';
+import Query, { Row, OrderedBy } from '../query/Query';
+import Table from './Table';
 
-
-export class ODataQuery extends AbstractQuery {
+export class ODataTable extends Table {
     _baseURL: string;
     _skip?: number;
     _top?: number;
@@ -46,7 +45,7 @@ export class ODataQuery extends AbstractQuery {
 
 
     url(): string {
-        let base = this._baseURL + "/" + this._tableName;
+        let base = this._baseURL + "/" + this._name;
         if (this._orderBy.length > 0) {
             return base + "?" + this.urlOrderedBy();
         } else {

@@ -1,11 +1,10 @@
-import { queryAllByAltText } from "@testing-library/react";
-import AbstractQuery from "./AbstractQuery";
-import { QueryColumn } from "./QueryColumn";
-import { ComplexQueryColumn } from "./ComplexQueryColumn";
-import { PrimitiveQueryColumn } from "./PrimitiveQueryColumn";
-import Query, { PrimitiveType, Row, OrderedBy } from "./Query";
+import { QueryColumn } from "../query/QueryColumn";
+import { ComplexQueryColumn } from "../query/ComplexQueryColumn";
+import { PrimitiveQueryColumn } from "../query/PrimitiveQueryColumn";
+import Query, { PrimitiveType, Row, OrderedBy } from "../query/Query";
+import Table from "./Table"
 
-interface CollectionQueryColumn {
+interface CollectionTableColumn {
     name: string;
     type?: PrimitiveType;
 }
@@ -15,7 +14,7 @@ interface ComplexCollectionQueryColumn {
     contents: CollectionColumnDefs[];
 }
 
-type CollectionColumnDefs = CollectionQueryColumn | ComplexCollectionQueryColumn
+type CollectionColumnDefs = CollectionTableColumn | ComplexCollectionQueryColumn
 
 /* Working here: 
 
@@ -30,7 +29,7 @@ could be inside an expanded column at two different ends of the header.
 
 */
 
-export class CollectionQuery extends AbstractQuery {
+export class CollectionTable extends Table {
     contents:  Array<Array<any>> ;
 
     constructor(columns: Array<CollectionColumnDefs>, contents: Array<any>) {
@@ -113,11 +112,11 @@ export class CollectionQuery extends AbstractQuery {
     }
 
     copy : () => Query = () => {
-        let result = new CollectionQuery([], this.contents).copyFrom(this);
+        let result = new CollectionTable([], this.contents).copyFrom(this);
         return result;
     }
 
-    copyFrom = (me : CollectionQuery) => {
+    copyFrom = (me : CollectionTable) => {
         let result = super.copyFrom(me);
         result.select.columns = me.select.columns;
         return result;
