@@ -31,10 +31,6 @@ export abstract class QueryColumn {
         return this._name === c._name && this._parent === c._parent;
     }
 
-    childs(): Array<QueryColumn> {
-        return [];
-    }
-
     // If I am expanded, how many columns wide am I on the screen?
     columnsAcross(): number { 
         return 1;
@@ -68,5 +64,9 @@ export abstract class QueryColumn {
         } else {
             return this._parent.textualId + "/" + this._name;
         }
+    }
+
+    get columns() : QueryColumn[] {
+        return [];
     }
 }

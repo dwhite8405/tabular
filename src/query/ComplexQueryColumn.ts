@@ -3,7 +3,7 @@ import { PrimitiveQueryColumn } from "./PrimitiveQueryColumn";
 import { QueryColumn } from "./QueryColumn";
 
 export class ComplexQueryColumn extends QueryColumn {
-    public childColumns: QueryColumn[];
+    private childColumns: QueryColumn[];
 
     constructor(basedOn : TableColumn, parent?: QueryColumn) {
         super(basedOn, parent);
@@ -104,7 +104,7 @@ export class ComplexQueryColumn extends QueryColumn {
 
     private expandedColumnsImpl(c:QueryColumn, result:QueryColumn[]) {
         if (c.numColumns() > 0 && c.isExpanded ) {
-            for (let each of c.childs()) {
+            for (let each of c.columns) {
                 this.expandedColumnsImpl(each, result);
             }
         }

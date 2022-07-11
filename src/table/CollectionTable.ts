@@ -71,8 +71,8 @@ export class CollectionTable extends Table {
 
     private addCells = (source:any[], column: QueryColumn, cells: any[]) => {
 
-        for(let i in column.childs()) {
-            let c = column.childs()[i];
+        for(let i in column.columns) {
+            let c = column.columns[i];
             if (c.isExpanded) {
                 this.addCells(source[i], c, cells);
             } else {

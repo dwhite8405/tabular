@@ -91,7 +91,7 @@ export default class Query {
     }
 
     get columns() : QueryColumn[] {
-        return this._select.childColumns;
+        return this._select.columns;
     }
 
     get expandedColumns() : QueryColumn[] {

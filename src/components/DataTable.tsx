@@ -136,7 +136,6 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         }
 
         let laidOutColumns: ColumnsLaidOut = ColumnsLaidOut.fromColumnDefinition(rootColumn);
-
         // TODO: working here. Add divs with position:absolute as the drop markers for a column.
         return <>{
             laidOutColumns.map(each => {
@@ -408,7 +407,7 @@ class ColumnsLaidOut {
         depth: number,
         rightEdge: number[],
         result: ColumnsLaidOut) {
-        for (let each of column.childs()) {
+        for (let each of column.columns) {
             result.put(rightEdge[0], depth, each);
             if (each instanceof ComplexQueryColumn && each.isExpanded) {
                 this.fromColumnDefinitionImpl(each, depth + 1, rightEdge, result);
