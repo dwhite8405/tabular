@@ -14,6 +14,15 @@ export default abstract class Table implements TableConstructor {
         return this._columns;
     }
 
+    getColumn = (p : string) => {
+        for (let c of this._columns) {
+            if (p == c.name) {
+                return c;
+            }
+        }
+        throw Error("Could not find column "+p);
+    } 
+
     /* Get the rows from "from" to "to", according to the parameters in the given query. */
     abstract get(q:Query, from:number, to:number): Row[];
 

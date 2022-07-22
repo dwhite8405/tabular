@@ -29,6 +29,7 @@ It's possible for a query to have the same column from a table twice, and that c
 could be inside an expanded column at two different ends of the header.
 
 */
+type Path = number[]; // sequence of indexes into a column tree to find a particular column.
 
 export class CollectionTable extends Table {
     contents:  Array<Array<any>> ;
@@ -57,31 +58,82 @@ export class CollectionTable extends Table {
     }
 
     get = (q:Query, from: number, to: number) => {
-            q._select.renumberColumns();
             let s : any[] = this.contents.slice(from, to);
+            let selectedColumns : QueryColumn[]  = [];
+            this.flatten(selectedColumns, q._select);
+            let paths : Path[];
             let result : Row[] = [];
+
+            paths = this.makePaths(selectedColumns, q.table);
+
             for (let each of s) {
                 let cells : any[] = [];
-                this.addCells(each, q._select, cells);
+                this.addCellsOfRow(each, paths, cells);
                 result.push({cells:cells});
             }
 
             return result;
     }
 
-    private addCells = (source:any[], column: QueryColumn, cells: any[]) => {
-
-        for(let i in column.columns) {
-            let c = column.columns[i];
-            if (c.isExpanded) {
-                this.addCells(source[i], c, cells);
+    private flatten = (result: QueryColumn[], q : QueryColumn) => {
+        for (let qeach of q.columns) {
+            if (q.isExpanded) {
+                this.flatten(result, qeach);
             } else {
-                if (undefined===source) {
-                    cells.push("Undefinedx");
-                } else {
-                    cells.push(source[i]);
-                }
+                result.push(qeach);
             }
+        }
+    }
+
+    private makePaths = (columns : QueryColumn[], table : Table) => {
+        let result : Path[] = [];
+        for (let c of columns) {
+            let thisPath = this.pathOf(c, table.columns);
+            if (null !== thisPath) {
+                result.push(thisPath);
+            } else {
+                result.push([]);
+            }
+
+        }
+        return result;
+    }
+
+    private pathOf : (c : QueryColumn, t : TableColumn[]) => (Path | null) 
+        = (c : QueryColumn, t : TableColumn[]) => {
+        let result : Path = [];
+        let index = 0;
+        for (let tEach of t) {
+            if (tEach == c._basedOn) {
+                return new Array(index);
+            }
+            if (tEach.children.length > 0) {
+                let r : Path | null = this.pathOf(c, tEach.children);
+                if (null!==r) {
+                    result.push(index);
+                    return result.concat(r);
+                }
+            } else {
+                return null;
+            }
+            index++;
+        }
+        return null;
+    }
+
+    private addCellsOfRow = (source:any[], paths : Path[], cells: any[]) => {
+        for (let path of paths) {
+            this.addCell(source, path, cells);
+        }
+    }
+
+    private addCell = (source:any[], path : Path, cells: any[]) => {
+        if (0 == path.length) {
+            cells.push("???");
+        } else if (1 == path.length) {
+            cells.push(source[path[0]]);
+        } else {
+            this.addCell(source[path[0]], path.slice(1), cells);
         }
     }
 

@@ -33,8 +33,10 @@ export default class Query {
         this._orderBy = [];
 
         // We use this super-column to contain a list of my actual visible columns.
+        //this.removeAllColumns(); - TypeScript compiler complains about this.
         this._select = new ComplexQueryColumn(new TableColumn("Parent column", PrimitiveType.String));
         this._select.isExpanded = true;
+
         this.addColumns(t.columns);
 
         this.copyFrom = this.copyFrom.bind(this);
@@ -122,6 +124,11 @@ export default class Query {
         return -1;
     }
 
+    removeAllColumns = () => {
+        this._select = new ComplexQueryColumn(new TableColumn("Parent column", PrimitiveType.String));
+        this._select.isExpanded = true;
+    }
+
     addColumns = (cs : TableColumn[]) => {
         for(let each of cs) {
             this._select.addColumn(each);
@@ -130,6 +137,10 @@ export default class Query {
 
     addColumn = (c : TableColumn) => {
         this._select.addColumn(c);
+    }
+
+    addColumnByPath = (p : string) => {
+        this.addColumn(this._table.getColumn(p));
     }
 
     moveColumn = (c: QueryColumn, expandedColumnsIndex: number) => {
@@ -157,6 +168,10 @@ export default class Query {
     private expandedIndexToActualIndex(expandedIndex: number) {
         let c : QueryColumn = this.expandedColumns[expandedIndex];
         return this._select.columns.findIndex((each) => each===c);
+    }
+
+    get table() : Table { 
+        return this._table;
     }
 }
 
