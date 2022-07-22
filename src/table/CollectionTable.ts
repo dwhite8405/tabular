@@ -32,7 +32,7 @@ could be inside an expanded column at two different ends of the header.
 type Path = number[]; // sequence of indexes into a column tree to find a particular column.
 
 export class CollectionTable extends Table {
-    contents:  Array<Array<any>> ;
+    contents: Array<Array<any>>;
 
     constructor(columns: Array<CollectionColumnDefs>, contents: Array<any>) {
         super();
@@ -41,14 +41,14 @@ export class CollectionTable extends Table {
     }
 
     private addColumns = (defs: CollectionColumnDefs[], parent?: TableColumn) => {
-        defs.forEach( each => {
+        defs.forEach(each => {
             if ('contents' in each) {
                 let t = new TableColumn(each.name, PrimitiveType.String);
                 this.addColumns(each.contents, t);
                 this.columns.push(t);
             } else {
                 let t = new TableColumn(each.name, each.type ?? PrimitiveType.String);
-                this.columns.push(t);    
+                this.columns.push(t);
             }
         });
     }
@@ -57,36 +57,41 @@ export class CollectionTable extends Table {
         return this.contents.length;
     }
 
-    get = (q:Query, from: number, to: number) => {
-            let s : any[] = this.contents.slice(from, to);
-            let selectedColumns : QueryColumn[]  = [];
-            this.flatten(selectedColumns, q._select);
-            let paths : Path[];
-            let result : Row[] = [];
+    get = (q: Query, from: number, to: number) => {
+        let s: any[] = this.contents.slice(from, to);
+        let selectedColumns: QueryColumn[] = [];
+        this.flatten(selectedColumns, q._select);
+        let paths: Path[];
+        let result: Row[] = [];
 
-            paths = this.makePaths(selectedColumns, q.table);
+        paths = this.makePaths(selectedColumns, q.table);
 
-            for (let each of s) {
-                let cells : any[] = [];
-                this.addCellsOfRow(each, paths, cells);
-                result.push({cells:cells});
-            }
+        for (let each of s) {
+            let cells: any[] = [];
+            this.addCellsOfRow(each, paths, cells);
+            result.push({ cells: cells });
+        }
 
-            return result;
+        return result;
     }
 
-    private flatten = (result: QueryColumn[], q : QueryColumn) => {
-        for (let qeach of q.columns) {
-            if (q.isExpanded) {
-                this.flatten(result, qeach);
-            } else {
-                result.push(qeach);
+    private flatten = (result: QueryColumn[], q: QueryColumn) => {
+        if (q.columns.length > 0) {
+            for (let qeach of q.columns) {
+                if (q.isExpanded) {
+                    this.flatten(result, qeach);
+                } else {
+                    result.push(qeach);
+                }
             }
+        }
+        else {
+            result.push(q);
         }
     }
 
-    private makePaths = (columns : QueryColumn[], table : Table) => {
-        let result : Path[] = [];
+    private makePaths = (columns: QueryColumn[], table: Table) => {
+        let result: Path[] = [];
         for (let c of columns) {
             let thisPath = this.pathOf(c, table.columns);
             if (null !== thisPath) {
@@ -99,35 +104,31 @@ export class CollectionTable extends Table {
         return result;
     }
 
-    private pathOf : (c : QueryColumn, t : TableColumn[]) => (Path | null) 
-        = (c : QueryColumn, t : TableColumn[]) => {
-        let result : Path = [];
-        let index = 0;
-        for (let tEach of t) {
-            if (tEach == c._basedOn) {
-                return new Array(index);
-            }
-            if (tEach.children.length > 0) {
-                let r : Path | null = this.pathOf(c, tEach.children);
-                if (null!==r) {
-                    result.push(index);
-                    return result.concat(r);
+    private pathOf: (c: QueryColumn, t: TableColumn[]) => (Path | null)
+        = (c: QueryColumn, t: TableColumn[]) => {
+            let index = 0;
+            for (let tEach of t) {
+                if (tEach == c._basedOn) {
+                    return [index];
                 }
-            } else {
-                return null;
+                if (tEach.children.length > 0) {
+                    let r: Path | null = this.pathOf(c, tEach.children);
+                    if (null !== r) {
+                        return [index].concat(r);
+                    }
+                } 
+                index++;
             }
-            index++;
+            return null;
         }
-        return null;
-    }
 
-    private addCellsOfRow = (source:any[], paths : Path[], cells: any[]) => {
+    private addCellsOfRow = (source: any[], paths: Path[], cells: any[]) => {
         for (let path of paths) {
             this.addCell(source, path, cells);
         }
     }
 
-    private addCell = (source:any[], path : Path, cells: any[]) => {
+    private addCell = (source: any[], path: Path, cells: any[]) => {
         if (0 == path.length) {
             cells.push("???");
         } else if (1 == path.length) {
@@ -154,13 +155,13 @@ export class CollectionTable extends Table {
         return this;
     } */
 
-    private magnitude(b : boolean) {
-        switch(b) {
-            case true: 
+    private magnitude(b: boolean) {
+        switch (b) {
+            case true:
                 return 1;
             case false:
                 return -1;
-        }        
+        }
     }
 
     getCount(q: Query): number {
@@ -168,6 +169,6 @@ export class CollectionTable extends Table {
     }
 
     refetchColumns(): void {
-       
+
     }
 }
