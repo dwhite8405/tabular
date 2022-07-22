@@ -43,13 +43,19 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private makeQueries = () => {
-    let q1 : Table = ODataTable.create(this.url, this.tableName);
-    let q2 : Table = new CollectionTable(
+    let t1 : Table = ODataTable.create(this.url, this.tableName);
+    let t2 : Table = new CollectionTable(
       [{name:'foo'}, {name: 'bar'}, {name: 'baz'}], 
       range(200000).map(each => [each, each+100, each+10000]));
-      q2.name = "200000 items.";
-    let q3: Table = this.makeBigLocalInterestingTable();
-    return [q3.query(), q2.query(), q1.query()];
+      t2.name = "200000 items.";
+    let t3: Table = this.makeBigLocalInterestingTable();
+
+    let q3 : Query = t3.query();
+    q3.removeAllColumns();
+    q3.addColumnByPath("Float");
+    q3.addColumnByPath("Integer");
+
+    return [q3, t2.query(), t1.query()];
   }
 
   private makeBigLocalInterestingTable() : Table {
